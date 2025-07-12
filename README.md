@@ -45,8 +45,10 @@ git clone https://github.com/shambhavi0608/Hospital-Management-System--by-Shambh
 ## 📸 Screenshots
 🚀 SPLASH PAGE
 <img width="100%" alt="Splash Page" src="https://github.com/user-attachments/assets/e0513785-b961-4828-b060-0d84dd946f15" />
+
 🔐 OUTPUT SCREEN OF LOGIN PAGE
-<img width="100%" alt="Login Page" src="https://github.com/user-attachments/assets/3dcffc48-0de5-4584-8685-93b564e8b62c" />
+<img width="1434" height="624" alt="image" src="https://github.com/user-attachments/assets/621694bf-44b8-48fa-8dd2-a084bdbdc9bb" />
+
 ❌ INVALID LOGIN ATTEMPT MESSAGE
 <img width="100%" alt="Invalid Login" src="https://github.com/user-attachments/assets/96db5779-b994-45f6-920a-ed9e87c7fe93" />
 🧾 ADD PATIENT DETAILS WINDOW
