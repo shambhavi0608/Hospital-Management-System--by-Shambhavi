@@ -43,27 +43,20 @@ git clone https://github.com/shambhavi0608/Hospital-Management-System--by-Shambh
 ---
 
 ## 📸 Screenshots
-SPLASH PAGE
-<img width="1481" height="1070" alt="image" src="https://github.com/user-attachments/assets/e0513785-b961-4828-b060-0d84dd946f15" />
-
-OUPUT SCREEN OF LOGIN PAGE 
-<img width="1102" height="130" alt="image" src="https://github.com/user-attachments/assets/3dcffc48-0de5-4584-8685-93b564e8b62c" />
-
-OUTPUT SCREEN DISPLAYING MESSAE OF INVALID OUTPUT
-<img width="1414" height="614" alt="image" src="https://github.com/user-attachments/assets/96db5779-b994-45f6-920a-ed9e87c7fe93" />
-
-ADD PATIENTS  DETAILS WINDOW:
-<img width="2545" height="1381" alt="image" src="https://github.com/user-attachments/assets/29dfa7c0-9f8c-4e41-966f-2c04c41a6db8" />
-
-ADD PATIENTS DETAILS QUERY IN MYSQL:
-<img width="2825" height="488" alt="image" src="https://github.com/user-attachments/assets/189f43b2-fe87-480a-998b-3e87e8b7f398" />
-
-HOW PASSENGER DATA IS STORED IN DATABASE IN FORM OF TABLE:
-<img width="2601" height="458" alt="image" src="https://github.com/user-attachments/assets/f762a9ed-29fc-4a4b-bc61-429b23cb858f" />
-
-ER DIAGRAM OF HOSPITAL MANAGEMENT SYSTEM
-<img width="1997" height="1414" alt="image" src="https://github.com/user-attachments/assets/93d74416-6838-4f1e-b796-5c998f4996b4" />
-
+🚀 SPLASH PAGE
+<img width="100%" alt="Splash Page" src="https://github.com/user-attachments/assets/e0513785-b961-4828-b060-0d84dd946f15" />
+🔐 OUTPUT SCREEN OF LOGIN PAGE
+<img width="100%" alt="Login Page" src="https://github.com/user-attachments/assets/3dcffc48-0de5-4584-8685-93b564e8b62c" />
+❌ INVALID LOGIN ATTEMPT MESSAGE
+<img width="100%" alt="Invalid Login" src="https://github.com/user-attachments/assets/96db5779-b994-45f6-920a-ed9e87c7fe93" />
+🧾 ADD PATIENT DETAILS WINDOW
+<img width="100%" alt="Add Patient Form" src="https://github.com/user-attachments/assets/29dfa7c0-9f8c-4e41-966f-2c04c41a6db8" />
+🛢️ PATIENT INSERT QUERY (MySQL)
+<img width="100%" alt="Patient Insert Query" src="https://github.com/user-attachments/assets/189f43b2-fe87-480a-998b-3e87e8b7f398" />
+📊 STORED PATIENT DATA IN MYSQL TABLE
+<img width="100%" alt="MySQL Table Data" src="https://github.com/user-attachments/assets/f762a9ed-29fc-4a4b-bc61-429b23cb858f" />
+🧩 ER DIAGRAM OF HOSPITAL MANAGEMENT SYSTEM
+<img width="100%" alt="ER Diagram" src="https://github.com/user-attachments/assets/93d74416-6838-4f1e-b796-5c998f4996b4" />
 
 ---
 
