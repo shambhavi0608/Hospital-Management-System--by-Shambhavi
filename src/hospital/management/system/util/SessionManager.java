@@ -5,39 +5,31 @@ import hospital.management.system.model.UserRole;
 
 import java.util.Optional;
 
-/*
- * Current logged-in user ki session manage karta hai.
+/**
+ * Application-wide authenticated session manager.
  *
- * INTERVIEW:
- * SessionManager central location provide karta hai jahan se
- * application ke different Swing panels current user aur uski
- * permissions check kar sakte hain.
+ * Ye class:
+ * - current logged-in user maintain karti hai
+ * - role-based authorization helpers provide karti hai
+ * - logout par session clear karti hai
  *
- * Password kabhi session mein store nahi hota.
+ * Password yahan kabhi store nahi hota.
  */
 public final class SessionManager {
 
-    /*
-     * volatile ensure karta hai ki different threads ko
-     * current updated value visible rahe.
-     */
     private static volatile LoggedInUser currentUser;
 
-    /*
-     * Utility class ka object create nahi hona chahiye.
-     */
     private SessionManager() {
     }
 
-    /*
-     * Successful authentication ke baad session start karta hai.
+    /**
+     * Successful login ke baad session create karta hai.
      */
     public static synchronized void startSession(
             LoggedInUser user
     ) {
 
         if (user == null) {
-
             throw new IllegalArgumentException(
                     "Session start karne ke liye user required hai."
             );
@@ -46,8 +38,8 @@ public final class SessionManager {
         currentUser = user;
     }
 
-    /*
-     * Logout ke waqt current session remove karta hai.
+    /**
+     * Current session completely clear karta hai.
      */
     public static synchronized void endSession() {
 
@@ -55,27 +47,21 @@ public final class SessionManager {
     }
 
     public static boolean isLoggedIn() {
-
         return currentUser != null;
     }
 
-    /*
-     * Optional use karne se null handling safer hoti hai.
-     */
     public static Optional<LoggedInUser> getCurrentUser() {
-
         return Optional.ofNullable(currentUser);
     }
 
-    /*
-     * Protected screen ke liye logged-in user required hota hai.
+    /**
+     * Login required screens/services ke liye.
      */
     public static LoggedInUser requireCurrentUser() {
 
         LoggedInUser user = currentUser;
 
         if (user == null) {
-
             throw new IllegalStateException(
                     "Koi user login nahi hai."
             );
@@ -84,9 +70,23 @@ public final class SessionManager {
         return user;
     }
 
+    public static UserRole getCurrentRole() {
+
+        return requireCurrentUser().getRole();
+    }
+
+    public static String getCurrentUsername() {
+
+        return requireCurrentUser().getUsername();
+    }
+
     public static boolean currentUserHasRole(
             UserRole requiredRole
     ) {
+
+        if (requiredRole == null) {
+            return false;
+        }
 
         LoggedInUser user = currentUser;
 
@@ -95,30 +95,138 @@ public final class SessionManager {
     }
 
     public static boolean isCurrentUserAdmin() {
-
-        return currentUserHasRole(
-                UserRole.ADMIN
-        );
+        return currentUserHasRole(UserRole.ADMIN);
     }
 
     public static boolean isCurrentUserDoctor() {
-
-        return currentUserHasRole(
-                UserRole.DOCTOR
-        );
+        return currentUserHasRole(UserRole.DOCTOR);
     }
 
     public static boolean isCurrentUserNurse() {
-
-        return currentUserHasRole(
-                UserRole.NURSE
-        );
+        return currentUserHasRole(UserRole.NURSE);
     }
 
     public static boolean isCurrentUserPatient() {
+        return currentUserHasRole(UserRole.PATIENT);
+    }
 
-        return currentUserHasRole(
-                UserRole.PATIENT
+    /**
+     * Patient records view karne ki permission.
+     */
+    public static boolean canViewPatients() {
+
+        LoggedInUser user = currentUser;
+
+        return user != null &&
+                user.canViewPatients();
+    }
+
+    /**
+     * Patient records modify karne ki permission.
+     *
+     * ADMIN + DOCTOR allowed.
+     * NURSE/PATIENT denied.
+     */
+    public static boolean canModifyPatients() {
+
+        LoggedInUser user = currentUser;
+
+        return user != null &&
+                user.canModifyPatients();
+    }
+
+    /**
+     * Staff management sirf ADMIN ke liye.
+     */
+    public static boolean canManageStaff() {
+
+        LoggedInUser user = currentUser;
+
+        return user != null &&
+                user.canManageStaff();
+    }
+
+    /**
+     * Analytics access.
+     */
+    public static boolean canViewAnalytics() {
+
+        LoggedInUser user = currentUser;
+
+        return user != null &&
+                user.canViewAnalytics();
+    }
+
+    /**
+     * Current logged-in patient's linked patient number.
+     */
+    public static Optional<String> getCurrentPatientNumber() {
+
+        LoggedInUser user = currentUser;
+
+        if (user == null ||
+                !user.hasPatientNumber()) {
+
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                user.getPatientNumber()
+        );
+    }
+
+    /**
+     * Authorization failure ko standardize karta hai.
+     */
+    public static void requireRole(
+            UserRole requiredRole
+    ) {
+
+        if (!currentUserHasRole(requiredRole)) {
+
+            throw new SecurityException(
+                    "Access denied. Required role: "
+                            + requiredRole.getDisplayName()
+            );
+        }
+    }
+
+    /**
+     * Multiple roles mein se koi ek required ho.
+     */
+    public static void requireAnyRole(
+            UserRole... allowedRoles
+    ) {
+
+        if (allowedRoles == null ||
+                allowedRoles.length == 0) {
+
+            throw new SecurityException(
+                    "No authorized roles configured."
+            );
+        }
+
+        LoggedInUser user = currentUser;
+
+        if (user == null) {
+
+            throw new SecurityException(
+                    "Access denied. Login required."
+            );
+        }
+
+        for (UserRole role : allowedRoles) {
+
+            if (role != null &&
+                    user.hasRole(role)) {
+
+                return;
+            }
+        }
+
+        throw new SecurityException(
+                "Access denied for role: "
+                        + user.getDisplayRole()
         );
     }
 }

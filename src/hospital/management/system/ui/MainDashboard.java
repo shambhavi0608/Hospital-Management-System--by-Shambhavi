@@ -12,49 +12,21 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Arc2D;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Smart HMS ka final role-based dashboard.
- *
- * ADMIN:
- * Dashboard, Patients, Staff, Rooms, Analytics, Assistant
- *
- * DOCTOR:
- * Dashboard, Patients, Rooms, Analytics, Assistant
- *
- * NURSE:
- * Dashboard, Patients, Rooms, Assistant
- *
- * PATIENT:
- * Home, Profile, Admission, My Room, Assistant
- */
 public final class MainDashboard extends JFrame {
 
-    private static final Color NAVY =
-            new Color(5, 39, 86);
-
-    private static final Color NAVY_HOVER =
-            new Color(8, 64, 120);
-
-    private static final Color BLUE =
-            new Color(20, 101, 219);
-
-    private static final Color TEAL =
-            new Color(12, 174, 184);
-
-    private static final Color ORANGE =
-            new Color(255, 139, 13);
-
-    private static final Color PURPLE =
-            new Color(105, 82, 235);
-
-    private static final Color RED =
-            new Color(244, 75, 85);
-
-    private static final Color GREEN =
-            new Color(21, 184, 128);
+    private static final Color NAVY = new Color(5, 39, 86);
+    private static final Color NAVY_HOVER = new Color(8, 64, 120);
+    private static final Color BLUE = new Color(20, 101, 219);
+    private static final Color TEAL = new Color(12, 174, 184);
+    private static final Color ORANGE = new Color(255, 139, 13);
+    private static final Color PURPLE = new Color(105, 82, 235);
+    private static final Color RED = new Color(244, 75, 85);
+    private static final Color GREEN = new Color(21, 184, 128);
 
     private static final Color PAGE_BACKGROUND =
             new Color(245, 248, 252);
@@ -65,40 +37,21 @@ public final class MainDashboard extends JFrame {
     private static final Color MUTED_TEXT =
             new Color(83, 101, 129);
 
-    private static final String DASHBOARD =
-            "DASHBOARD";
-
-    private static final String PATIENTS =
-            "PATIENTS";
-
-    private static final String STAFF =
-            "STAFF";
-
-    private static final String ROOMS =
-            "ROOMS";
-
-    private static final String ANALYTICS =
-            "ANALYTICS";
-
-    private static final String ASSISTANT =
-            "ASSISTANT";
-
-    private static final String PROFILE =
-            "PROFILE";
-
-    private static final String ADMISSION =
-            "ADMISSION";
-
-    private static final String MY_ROOM =
-            "MY_ROOM";
+    private static final String DASHBOARD = "DASHBOARD";
+    private static final String PATIENTS = "PATIENTS";
+    private static final String STAFF = "STAFF";
+    private static final String ROOMS = "ROOMS";
+    private static final String ANALYTICS = "ANALYTICS";
+    private static final String ASSISTANT = "ASSISTANT";
+    private static final String PROFILE = "PROFILE";
+    private static final String ADMISSION = "ADMISSION";
+    private static final String MY_ROOM = "MY_ROOM";
 
     private final DashboardDAO dashboardDAO =
             new DashboardDAO();
 
     private final LoggedInUser currentUser =
-            SessionManager
-                    .getCurrentUser()
-                    .orElse(null);
+            SessionManager.getCurrentUser().orElse(null);
 
     private final CardLayout cardLayout =
             new CardLayout();
@@ -107,8 +60,7 @@ public final class MainDashboard extends JFrame {
             new JPanel(cardLayout);
 
     private final Map<String, NavigationButton>
-            navigationButtons =
-            new LinkedHashMap<>();
+            navigationButtons = new LinkedHashMap<>();
 
     private MetricCard patientsCard;
     private MetricCard availableRoomsCard;
@@ -124,31 +76,23 @@ public final class MainDashboard extends JFrame {
 
     private Timer refreshTimer;
 
-    private String currentPage =
-            DASHBOARD;
+    private String currentPage = DASHBOARD;
 
     public MainDashboard() {
 
         if (currentUser == null) {
-
             SwingUtilities.invokeLater(
-                    () -> Login.main(
-                            new String[0]
-                    )
+                    () -> Login.main(new String[0])
             );
 
             dispose();
-
             return;
         }
 
         configureWindow();
-
         registerPages();
 
-        setLayout(
-                new BorderLayout()
-        );
+        setLayout(new BorderLayout());
 
         add(
                 createSidebar(),
@@ -165,9 +109,7 @@ public final class MainDashboard extends JFrame {
         setVisible(true);
 
         if (!isPatient()) {
-
             refreshDashboardData();
-
             startAutoRefresh();
         }
     }
@@ -182,16 +124,10 @@ public final class MainDashboard extends JFrame {
                 JFrame.EXIT_ON_CLOSE
         );
 
-        setSize(
-                1500,
-                900
-        );
+        setSize(1550, 900);
 
         setMinimumSize(
-                new Dimension(
-                        1180,
-                        720
-                )
+                new Dimension(1250, 720)
         );
 
         setLocationRelativeTo(null);
@@ -274,11 +210,7 @@ public final class MainDashboard extends JFrame {
                 );
             }
 
-            if (
-                    isAdmin()
-                            ||
-                            isDoctor()
-            ) {
+            if (isAdmin() || isDoctor()) {
 
                 pageContainer.add(
                         new AnalyticsPanel(),
@@ -293,10 +225,13 @@ public final class MainDashboard extends JFrame {
         );
     }
 
+    // ============================================================
+    // SIDEBAR
+    // ============================================================
+
     private JPanel createSidebar() {
 
-        JPanel sidebar =
-                new JPanel();
+        JPanel sidebar = new JPanel();
 
         sidebar.setLayout(
                 new BoxLayout(
@@ -307,28 +242,28 @@ public final class MainDashboard extends JFrame {
 
         sidebar.setBackground(NAVY);
 
+        // Increased width so complete navigation labels are visible.
         sidebar.setPreferredSize(
-                new Dimension(
-                        285,
-                        0
-                )
+                new Dimension(340, 0)
+        );
+
+        sidebar.setMinimumSize(
+                new Dimension(340, 0)
         );
 
         sidebar.setBorder(
                 new EmptyBorder(
                         28,
-                        14,
+                        18,
                         22,
-                        14
+                        18
                 )
         );
 
-        sidebar.add(
-                createBrandPanel()
-        );
+        sidebar.add(createBrandPanel());
 
         sidebar.add(
-                Box.createVerticalStrut(28)
+                Box.createVerticalStrut(30)
         );
 
         if (isPatient()) {
@@ -394,11 +329,7 @@ public final class MainDashboard extends JFrame {
                     IconType.ROOM
             );
 
-            if (
-                    isAdmin()
-                            ||
-                            isDoctor()
-            ) {
+            if (isAdmin() || isDoctor()) {
 
                 addNavigationButton(
                         sidebar,
@@ -436,9 +367,7 @@ public final class MainDashboard extends JFrame {
                 Box.createVerticalStrut(18)
         );
 
-        sidebar.add(
-                createUserCard()
-        );
+        sidebar.add(createUserCard());
 
         return sidebar;
     }
@@ -459,7 +388,7 @@ public final class MainDashboard extends JFrame {
         brandPanel.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
-                        70
+                        72
                 )
         );
 
@@ -476,28 +405,23 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        JPanel brandTextPanel =
-                new JPanel();
+        JPanel textPanel = new JPanel();
 
-        brandTextPanel.setOpaque(false);
+        textPanel.setOpaque(false);
 
-        brandTextPanel.setLayout(
+        textPanel.setLayout(
                 new BoxLayout(
-                        brandTextPanel,
+                        textPanel,
                         BoxLayout.Y_AXIS
                 )
         );
 
-        JLabel brandNameLabel =
-                new JLabel(
-                        "SMART HMS"
-                );
+        JLabel brandName =
+                new JLabel("SMART HMS");
 
-        brandNameLabel.setForeground(
-                Color.WHITE
-        );
+        brandName.setForeground(Color.WHITE);
 
-        brandNameLabel.setFont(
+        brandName.setFont(
                 new Font(
                         "Segoe UI",
                         Font.BOLD,
@@ -505,12 +429,10 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        JLabel portalLabel =
-                new JLabel(
-                        "Operations Portal"
-                );
+        JLabel portal =
+                new JLabel("Operations Portal");
 
-        portalLabel.setForeground(
+        portal.setForeground(
                 new Color(
                         174,
                         207,
@@ -518,7 +440,7 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        portalLabel.setFont(
+        portal.setFont(
                 new Font(
                         "Segoe UI",
                         Font.PLAIN,
@@ -526,20 +448,16 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        brandTextPanel.add(
-                brandNameLabel
-        );
+        textPanel.add(brandName);
 
-        brandTextPanel.add(
+        textPanel.add(
                 Box.createVerticalStrut(3)
         );
 
-        brandTextPanel.add(
-                portalLabel
-        );
+        textPanel.add(portal);
 
         brandPanel.add(hospitalIcon);
-        brandPanel.add(brandTextPanel);
+        brandPanel.add(textPanel);
 
         return brandPanel;
     }
@@ -547,13 +465,13 @@ public final class MainDashboard extends JFrame {
     private void addNavigationButton(
             JPanel sidebar,
             String pageName,
-            String buttonText,
+            String text,
             IconType iconType
     ) {
 
         NavigationButton button =
                 new NavigationButton(
-                        buttonText,
+                        text,
                         iconType
                 );
 
@@ -561,27 +479,17 @@ public final class MainDashboard extends JFrame {
                 event -> {
 
                     if (
-                            PATIENTS.equals(
-                                    pageName
-                            )
-                                    &&
-                                    patientPanel != null
+                            PATIENTS.equals(pageName)
+                                    && patientPanel != null
                     ) {
-
-                        patientPanel
-                                .refreshPatients();
+                        patientPanel.refreshPatients();
                     }
 
                     if (
-                            STAFF.equals(
-                                    pageName
-                            )
-                                    &&
-                                    staffPanel != null
+                            STAFF.equals(pageName)
+                                    && staffPanel != null
                     ) {
-
-                        staffPanel
-                                .refreshStaff();
+                        staffPanel.refreshStaff();
                     }
 
                     showPage(pageName);
@@ -602,7 +510,7 @@ public final class MainDashboard extends JFrame {
 
     private JPanel createUserCard() {
 
-        RoundedPanel userCard =
+        RoundedPanel card =
                 new RoundedPanel(
                         new Color(
                                 8,
@@ -612,14 +520,14 @@ public final class MainDashboard extends JFrame {
                         18
                 );
 
-        userCard.setLayout(
+        card.setLayout(
                 new BorderLayout(
                         12,
                         0
                 )
         );
 
-        userCard.setBorder(
+        card.setBorder(
                 new EmptyBorder(
                         14,
                         14,
@@ -628,18 +536,18 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        userCard.setMaximumSize(
+        card.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
-                        82
+                        84
                 )
         );
 
-        userCard.setAlignmentX(
+        card.setAlignmentX(
                 Component.LEFT_ALIGNMENT
         );
 
-        JLabel iconLabel =
+        JLabel icon =
                 new JLabel(
                         new VectorIcon(
                                 IconType.USER,
@@ -648,28 +556,23 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        JPanel userTextPanel =
-                new JPanel();
+        JPanel textPanel = new JPanel();
 
-        userTextPanel.setOpaque(false);
+        textPanel.setOpaque(false);
 
-        userTextPanel.setLayout(
+        textPanel.setLayout(
                 new BoxLayout(
-                        userTextPanel,
+                        textPanel,
                         BoxLayout.Y_AXIS
                 )
         );
 
-        JLabel usernameLabel =
-                new JLabel(
-                        displayUsername()
-                );
+        JLabel username =
+                new JLabel(displayUsername());
 
-        usernameLabel.setForeground(
-                Color.WHITE
-        );
+        username.setForeground(Color.WHITE);
 
-        usernameLabel.setFont(
+        username.setFont(
                 new Font(
                         "Segoe UI",
                         Font.BOLD,
@@ -677,12 +580,10 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        JLabel roleLabel =
-                new JLabel(
-                        displayRole()
-                );
+        JLabel role =
+                new JLabel(displayRole());
 
-        roleLabel.setForeground(
+        role.setForeground(
                 new Color(
                         77,
                         232,
@@ -690,7 +591,7 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        roleLabel.setFont(
+        role.setFont(
                 new Font(
                         "Segoe UI",
                         Font.BOLD,
@@ -698,30 +599,30 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        userTextPanel.add(
-                usernameLabel
-        );
+        textPanel.add(username);
 
-        userTextPanel.add(
+        textPanel.add(
                 Box.createVerticalStrut(5)
         );
 
-        userTextPanel.add(
-                roleLabel
-        );
+        textPanel.add(role);
 
-        userCard.add(
-                iconLabel,
+        card.add(
+                icon,
                 BorderLayout.WEST
         );
 
-        userCard.add(
-                userTextPanel,
+        card.add(
+                textPanel,
                 BorderLayout.CENTER
         );
 
-        return userCard;
+        return card;
     }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
 
     private JPanel createDashboardPage() {
 
@@ -734,21 +635,21 @@ public final class MainDashboard extends JFrame {
                 PAGE_BACKGROUND
         );
 
-        JPanel dashboardContent =
+        JPanel content =
                 new JPanel();
 
-        dashboardContent.setBackground(
+        content.setBackground(
                 PAGE_BACKGROUND
         );
 
-        dashboardContent.setLayout(
+        content.setLayout(
                 new BoxLayout(
-                        dashboardContent,
+                        content,
                         BoxLayout.Y_AXIS
                 )
         );
 
-        dashboardContent.setBorder(
+        content.setBorder(
                 new EmptyBorder(
                         30,
                         34,
@@ -757,42 +658,36 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        dashboardContent.add(
+        content.add(
                 createDashboardHeader()
         );
 
-        dashboardContent.add(
+        content.add(
                 Box.createVerticalStrut(24)
         );
 
-        dashboardContent.add(
+        content.add(
                 createMetricCards()
         );
 
-        dashboardContent.add(
+        content.add(
                 Box.createVerticalStrut(24)
         );
 
-        dashboardContent.add(
+        content.add(
                 createOverviewSection()
         );
 
-        dashboardContent.add(
+        content.add(
                 Box.createVerticalStrut(24)
         );
 
-        dashboardContent.add(
+        content.add(
                 createQuickActionsSection()
         );
 
-        dashboardContent.add(
-                Box.createVerticalGlue()
-        );
-
         JScrollPane scrollPane =
-                new JScrollPane(
-                        dashboardContent
-                );
+                new JScrollPane(content);
 
         scrollPane.setBorder(null);
 
@@ -814,7 +709,7 @@ public final class MainDashboard extends JFrame {
 
     private JPanel createDashboardHeader() {
 
-        JPanel headerPanel =
+        JPanel header =
                 new JPanel(
                         new BorderLayout(
                                 20,
@@ -822,38 +717,27 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        headerPanel.setOpaque(false);
+        header.setOpaque(false);
 
-        headerPanel.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        90
-                )
-        );
-
-        headerPanel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        JPanel greetingPanel =
+        JPanel greeting =
                 new JPanel();
 
-        greetingPanel.setOpaque(false);
+        greeting.setOpaque(false);
 
-        greetingPanel.setLayout(
+        greeting.setLayout(
                 new BoxLayout(
-                        greetingPanel,
+                        greeting,
                         BoxLayout.Y_AXIS
                 )
         );
 
-        JLabel welcomeLabel =
+        JLabel welcome =
                 new JLabel(
                         "Welcome, "
                                 + displayUsername()
                 );
 
-        welcomeLabel.setFont(
+        welcome.setFont(
                 new Font(
                         "Segoe UI",
                         Font.BOLD,
@@ -861,16 +745,16 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        welcomeLabel.setForeground(
+        welcome.setForeground(
                 PRIMARY_TEXT
         );
 
-        JLabel subtitleLabel =
+        JLabel subtitle =
                 new JLabel(
                         "Here is your live hospital overview"
                 );
 
-        subtitleLabel.setFont(
+        subtitle.setFont(
                 new Font(
                         "Segoe UI",
                         Font.PLAIN,
@@ -878,23 +762,19 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        subtitleLabel.setForeground(
+        subtitle.setForeground(
                 MUTED_TEXT
         );
 
-        greetingPanel.add(
-                welcomeLabel
-        );
+        greeting.add(welcome);
 
-        greetingPanel.add(
+        greeting.add(
                 Box.createVerticalStrut(5)
         );
 
-        greetingPanel.add(
-                subtitleLabel
-        );
+        greeting.add(subtitle);
 
-        JPanel userArea =
+        JPanel right =
                 new JPanel(
                         new FlowLayout(
                                 FlowLayout.RIGHT,
@@ -903,7 +783,7 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        userArea.setOpaque(false);
+        right.setOpaque(false);
 
         JLabel userIcon =
                 new JLabel(
@@ -914,24 +794,24 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        JPanel identityPanel =
+        JPanel identity =
                 new JPanel();
 
-        identityPanel.setOpaque(false);
+        identity.setOpaque(false);
 
-        identityPanel.setLayout(
+        identity.setLayout(
                 new BoxLayout(
-                        identityPanel,
+                        identity,
                         BoxLayout.Y_AXIS
                 )
         );
 
-        JLabel nameLabel =
+        JLabel name =
                 new JLabel(
                         displayUsername()
                 );
 
-        nameLabel.setFont(
+        name.setFont(
                 new Font(
                         "Segoe UI",
                         Font.BOLD,
@@ -939,16 +819,16 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        nameLabel.setForeground(
+        name.setForeground(
                 PRIMARY_TEXT
         );
 
-        JLabel roleLabel =
+        JLabel role =
                 new JLabel(
                         displayRole()
                 );
 
-        roleLabel.setFont(
+        role.setFont(
                 new Font(
                         "Segoe UI",
                         Font.PLAIN,
@@ -956,44 +836,43 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        roleLabel.setForeground(
+        role.setForeground(
                 MUTED_TEXT
         );
 
-        identityPanel.add(nameLabel);
-        identityPanel.add(roleLabel);
+        identity.add(name);
+        identity.add(role);
 
-        JButton refreshButton =
+        JButton refresh =
                 createActionButton(
                         "REFRESH",
                         BLUE
                 );
 
-        refreshButton.addActionListener(
-                event ->
-                        refreshDashboardData()
+        refresh.addActionListener(
+                event -> refreshDashboardData()
         );
 
-        userArea.add(userIcon);
-        userArea.add(identityPanel);
-        userArea.add(refreshButton);
+        right.add(userIcon);
+        right.add(identity);
+        right.add(refresh);
 
-        headerPanel.add(
-                greetingPanel,
+        header.add(
+                greeting,
                 BorderLayout.WEST
         );
 
-        headerPanel.add(
-                userArea,
+        header.add(
+                right,
                 BorderLayout.EAST
         );
 
-        return headerPanel;
+        return header;
     }
 
     private JPanel createMetricCards() {
 
-        JPanel cardsPanel =
+        JPanel panel =
                 new JPanel(
                         new GridLayout(
                                 1,
@@ -1003,24 +882,13 @@ public final class MainDashboard extends JFrame {
                         )
                 );
 
-        cardsPanel.setOpaque(false);
+        panel.setOpaque(false);
 
-        cardsPanel.setMaximumSize(
+        panel.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
                         160
                 )
-        );
-
-        cardsPanel.setPreferredSize(
-                new Dimension(
-                        1000,
-                        160
-                )
-        );
-
-        cardsPanel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
         );
 
         patientsCard =
@@ -1058,13 +926,13 @@ public final class MainDashboard extends JFrame {
                         IconType.NURSE
                 );
 
-        cardsPanel.add(patientsCard);
-        cardsPanel.add(availableRoomsCard);
-        cardsPanel.add(occupiedRoomsCard);
-        cardsPanel.add(doctorsCard);
-        cardsPanel.add(nursesCard);
+        panel.add(patientsCard);
+        panel.add(availableRoomsCard);
+        panel.add(occupiedRoomsCard);
+        panel.add(doctorsCard);
+        panel.add(nursesCard);
 
-        return cardsPanel;
+        return panel;
     }
 
     private JPanel createOverviewSection() {
@@ -1081,21 +949,28 @@ public final class MainDashboard extends JFrame {
 
         overviewPanel.setOpaque(false);
 
-        overviewPanel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
+        /*
+         * Fixed height prevents the occupancy card
+         * from being vertically compressed.
+         */
+        overviewPanel.setPreferredSize(
+                new Dimension(
+                        1000,
+                        250
+                )
+        );
+
+        overviewPanel.setMinimumSize(
+                new Dimension(
+                        800,
+                        250
+                )
         );
 
         overviewPanel.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
-                        300
-                )
-        );
-
-        overviewPanel.setPreferredSize(
-                new Dimension(
-                        1000,
-                        300
+                        250
                 )
         );
 
@@ -1156,14 +1031,14 @@ public final class MainDashboard extends JFrame {
                 BorderLayout.NORTH
         );
 
-        JPanel statusPanel =
+        JPanel status =
                 new JPanel();
 
-        statusPanel.setOpaque(false);
+        status.setOpaque(false);
 
-        statusPanel.setLayout(
+        status.setLayout(
                 new BoxLayout(
-                        statusPanel,
+                        status,
                         BoxLayout.Y_AXIS
                 )
         );
@@ -1174,7 +1049,7 @@ public final class MainDashboard extends JFrame {
                         ORANGE
                 );
 
-        JLabel refreshStatusLabel =
+        JLabel autoRefresh =
                 createStatusLabel(
                         "Auto-refresh: Every 10 seconds",
                         GREEN
@@ -1186,48 +1061,44 @@ public final class MainDashboard extends JFrame {
                         MUTED_TEXT
                 );
 
-        JLabel sessionStatusLabel =
+        JLabel session =
                 createStatusLabel(
                         "Session role: "
                                 + displayRole(),
                         BLUE
                 );
 
-        statusPanel.add(
-                databaseStatusLabel
-        );
+        status.add(databaseStatusLabel);
 
-        statusPanel.add(
+        status.add(
                 Box.createVerticalStrut(17)
         );
 
-        statusPanel.add(
-                refreshStatusLabel
-        );
+        status.add(autoRefresh);
 
-        statusPanel.add(
+        status.add(
                 Box.createVerticalStrut(17)
         );
 
-        statusPanel.add(
-                lastUpdatedLabel
-        );
+        status.add(lastUpdatedLabel);
 
-        statusPanel.add(
+        status.add(
                 Box.createVerticalStrut(17)
         );
 
-        statusPanel.add(
-                sessionStatusLabel
-        );
+        status.add(session);
 
         card.add(
-                statusPanel,
+                status,
                 BorderLayout.CENTER
         );
 
         return card;
     }
+
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
 
     private JPanel createQuickActionsSection() {
 
@@ -1248,17 +1119,6 @@ public final class MainDashboard extends JFrame {
                 )
         );
 
-        card.setPreferredSize(
-                new Dimension(
-                        1000,
-                        180
-                )
-        );
-
-        card.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
         card.add(
                 createSectionTitle(
                         "Quick Actions"
@@ -1266,95 +1126,83 @@ public final class MainDashboard extends JFrame {
                 BorderLayout.NORTH
         );
 
-        JPanel actionsPanel =
+        int columns = isAdmin() ? 5 : 4;
+
+        JPanel actions =
                 new JPanel(
                         new GridLayout(
                                 1,
-                                isAdmin() ? 5 : 4,
+                                columns,
                                 14,
                                 0
                         )
                 );
 
-        actionsPanel.setOpaque(false);
+        actions.setOpaque(false);
 
-        actionsPanel.add(
+        actions.add(
                 createQuickButton(
                         "Patients",
                         IconType.PATIENT,
                         BLUE,
-                        () -> showPage(
-                                PATIENTS
-                        )
+                        () -> showPage(PATIENTS)
                 )
         );
 
         if (isAdmin()) {
 
-            actionsPanel.add(
+            actions.add(
                     createQuickButton(
                             "Staff",
                             IconType.STAFF,
                             PURPLE,
-                            () -> showPage(
-                                    STAFF
-                            )
+                            () -> showPage(STAFF)
                     )
             );
         }
 
-        actionsPanel.add(
+        actions.add(
                 createQuickButton(
                         "Find Room",
                         IconType.ROOM,
                         ORANGE,
-                        () -> showPage(
-                                ROOMS
-                        )
+                        () -> showPage(ROOMS)
                 )
         );
 
-        if (
-                isAdmin()
-                        ||
-                        isDoctor()
-        ) {
+        if (isAdmin() || isDoctor()) {
 
-            actionsPanel.add(
+            actions.add(
                     createQuickButton(
                             "Analytics",
                             IconType.ANALYTICS,
-                            new Color(
-                                    92,
-                                    79,
-                                    210
-                            ),
-                            () -> showPage(
-                                    ANALYTICS
-                            )
+                            PURPLE,
+                            () -> showPage(ANALYTICS)
                     )
             );
         }
 
-        actionsPanel.add(
+        actions.add(
                 createQuickButton(
                         "Assistant",
                         IconType.CHAT,
                         TEAL,
-                        () -> showPage(
-                                ASSISTANT
-                        )
+                        () -> showPage(ASSISTANT)
                 )
         );
 
         card.add(
-                actionsPanel,
+                actions,
                 BorderLayout.CENTER
         );
 
         return card;
     }
 
+    /*
+     * Custom painted dashboard button.
+     * Isse Windows Look & Feel button ko grey nahi karega.
+     */
     private JButton createQuickButton(
             String text,
             IconType iconType,
@@ -1362,58 +1210,12 @@ public final class MainDashboard extends JFrame {
             Runnable action
     ) {
 
-        JButton button =
-                new JButton(
+        DashboardButton button =
+                new DashboardButton(
                         text,
-                        new VectorIcon(
-                                iconType,
-                                30,
-                                Color.WHITE
-                        )
+                        iconType,
+                        background
                 );
-
-        button.setVerticalTextPosition(
-                SwingConstants.BOTTOM
-        );
-
-        button.setHorizontalTextPosition(
-                SwingConstants.CENTER
-        );
-
-        button.setIconTextGap(8);
-
-        button.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        13
-                )
-        );
-
-        button.setForeground(
-                Color.WHITE
-        );
-
-        button.setBackground(
-                background
-        );
-
-        button.setFocusPainted(false);
-
-        button.setCursor(
-                Cursor.getPredefinedCursor(
-                        Cursor.HAND_CURSOR
-                )
-        );
-
-        button.setBorder(
-                new EmptyBorder(
-                        12,
-                        8,
-                        12,
-                        8
-                )
-        );
 
         button.addActionListener(
                 event -> action.run()
@@ -1422,122 +1224,23 @@ public final class MainDashboard extends JFrame {
         return button;
     }
 
-    private RoundedPanel createContentCard() {
-
-        RoundedPanel card =
-                new RoundedPanel(
-                        Color.WHITE,
-                        18
-                );
-
-        card.setBorder(
-                new EmptyBorder(
-                        22,
-                        22,
-                        22,
-                        22
-                )
-        );
-
-        return card;
-    }
-
-    private JLabel createSectionTitle(
-            String text
-    ) {
-
-        JLabel label =
-                new JLabel(text);
-
-        label.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        18
-                )
-        );
-
-        label.setForeground(
-                PRIMARY_TEXT
-        );
-
-        return label;
-    }
-
-    private JLabel createStatusLabel(
-            String text,
-            Color color
-    ) {
-
-        JLabel label =
-                new JLabel(
-                        text,
-                        new VectorIcon(
-                                IconType.DOT,
-                                13,
-                                color
-                        ),
-                        SwingConstants.LEFT
-                );
-
-        label.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.PLAIN,
-                        13
-                )
-        );
-
-        label.setForeground(
-                MUTED_TEXT
-        );
-
-        label.setIconTextGap(10);
-
-        label.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        return label;
-    }
-
     private JButton createActionButton(
             String text,
-            Color color
+            Color background
     ) {
 
-        JButton button =
-                new JButton(text);
-
-        button.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        12
-                )
-        );
-
-        button.setBackground(color);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-
-        button.setCursor(
-                Cursor.getPredefinedCursor(
-                        Cursor.HAND_CURSOR
-                )
-        );
-
-        button.setBorder(
-                new EmptyBorder(
-                        11,
-                        18,
-                        11,
-                        18
-                )
-        );
+        DashboardActionButton button =
+                new DashboardActionButton(
+                        text,
+                        background
+                );
 
         return button;
     }
+
+    // ============================================================
+    // PAGE NAVIGATION
+    // ============================================================
 
     private void showPage(
             String pageName
@@ -1545,34 +1248,25 @@ public final class MainDashboard extends JFrame {
 
         if (
                 ANALYTICS.equals(pageName)
-                        &&
-                        !(isAdmin() || isDoctor())
+                        && !(isAdmin() || isDoctor())
         ) {
-
             showAccessRestricted();
-
             return;
         }
 
         if (
                 STAFF.equals(pageName)
-                        &&
-                        !isAdmin()
+                        && !isAdmin()
         ) {
-
             showAccessRestricted();
-
             return;
         }
 
         if (
                 PATIENTS.equals(pageName)
-                        &&
-                        isPatient()
+                        && isPatient()
         ) {
-
             showAccessRestricted();
-
             return;
         }
 
@@ -1588,19 +1282,14 @@ public final class MainDashboard extends JFrame {
                 : navigationButtons.entrySet()
         ) {
 
-            entry.getValue()
-                    .setActive(
-                            entry.getKey()
-                                    .equals(
-                                            pageName
-                                    )
-                    );
+            entry.getValue().setActive(
+                    entry.getKey().equals(pageName)
+            );
         }
 
         if (
                 DASHBOARD.equals(pageName)
-                        &&
-                        !isPatient()
+                        && !isPatient()
         ) {
             refreshDashboardData();
         }
@@ -1617,21 +1306,26 @@ public final class MainDashboard extends JFrame {
         );
     }
 
+    // ============================================================
+    // LIVE DATABASE DATA
+    // ============================================================
+
     private void refreshDashboardData() {
 
         if (
                 isPatient()
-                        ||
-                        patientsCard == null
+                        || patientsCard == null
         ) {
             return;
         }
 
         setMetricsText("...");
 
-        databaseStatusLabel.setText(
-                "Loading live database data..."
-        );
+        if (databaseStatusLabel != null) {
+            databaseStatusLabel.setText(
+                    "Loading live database data..."
+            );
+        }
 
         SwingWorker<int[], Void> worker =
                 new SwingWorker<>() {
@@ -1663,28 +1357,13 @@ public final class MainDashboard extends JFrame {
 
                         try {
 
-                            int[] result =
-                                    get();
+                            int[] result = get();
 
-                            patientsCard.setValue(
-                                    result[0]
-                            );
-
-                            availableRoomsCard.setValue(
-                                    result[1]
-                            );
-
-                            occupiedRoomsCard.setValue(
-                                    result[2]
-                            );
-
-                            doctorsCard.setValue(
-                                    result[3]
-                            );
-
-                            nursesCard.setValue(
-                                    result[4]
-                            );
+                            patientsCard.setValue(result[0]);
+                            availableRoomsCard.setValue(result[1]);
+                            occupiedRoomsCard.setValue(result[2]);
+                            doctorsCard.setValue(result[3]);
+                            nursesCard.setValue(result[4]);
 
                             databaseStatusLabel.setText(
                                     "Database connected successfully"
@@ -1692,11 +1371,9 @@ public final class MainDashboard extends JFrame {
 
                             lastUpdatedLabel.setText(
                                     "Last updated: "
-                                            + java.time.LocalTime
-                                            .now()
+                                            + LocalTime.now()
                                             .format(
-                                                    java.time.format
-                                                            .DateTimeFormatter
+                                                    DateTimeFormatter
                                                             .ofPattern(
                                                                     "hh:mm:ss a"
                                                             )
@@ -1707,22 +1384,10 @@ public final class MainDashboard extends JFrame {
 
                         } catch (Exception exception) {
 
-                            setMetricsText(
-                                    "Error"
-                            );
+                            setMetricsText("Error");
 
                             databaseStatusLabel.setText(
                                     "Database connection failed"
-                            );
-
-                            JOptionPane.showMessageDialog(
-                                    MainDashboard.this,
-                                    "Dashboard data could not be loaded:\n"
-                                            + rootMessage(
-                                            exception
-                                    ),
-                                    "Database Error",
-                                    JOptionPane.ERROR_MESSAGE
                             );
                         }
                     }
@@ -1735,11 +1400,25 @@ public final class MainDashboard extends JFrame {
             String text
     ) {
 
-        patientsCard.setText(text);
-        availableRoomsCard.setText(text);
-        occupiedRoomsCard.setText(text);
-        doctorsCard.setText(text);
-        nursesCard.setText(text);
+        if (patientsCard != null) {
+            patientsCard.setText(text);
+        }
+
+        if (availableRoomsCard != null) {
+            availableRoomsCard.setText(text);
+        }
+
+        if (occupiedRoomsCard != null) {
+            occupiedRoomsCard.setText(text);
+        }
+
+        if (doctorsCard != null) {
+            doctorsCard.setText(text);
+        }
+
+        if (nursesCard != null) {
+            nursesCard.setText(text);
+        }
     }
 
     private void startAutoRefresh() {
@@ -1761,6 +1440,10 @@ public final class MainDashboard extends JFrame {
 
         refreshTimer.start();
     }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
 
     private void logoutUser() {
 
@@ -1817,47 +1500,26 @@ public final class MainDashboard extends JFrame {
     private boolean isAdmin() {
 
         return currentUser != null
-                &&
-                currentUser.getRole()
-                        == UserRole.ADMIN;
+                && currentUser.getRole()
+                == UserRole.ADMIN;
     }
 
     private boolean isDoctor() {
 
         return currentUser != null
-                &&
-                currentUser.getRole()
-                        == UserRole.DOCTOR;
+                && currentUser.getRole()
+                == UserRole.DOCTOR;
     }
 
     private boolean isPatient() {
 
         return currentUser != null
-                &&
-                currentUser.getRole()
-                        == UserRole.PATIENT;
-    }
-
-    private String rootMessage(
-            Throwable throwable
-    ) {
-
-        Throwable current = throwable;
-
-        while (
-                current.getCause()
-                        != null
-        ) {
-            current = current.getCause();
-        }
-
-        return current.getMessage() == null
-                ? "Unknown database error"
-                : current.getMessage();
+                && currentUser.getRole()
+                == UserRole.PATIENT;
     }
 
     public static void main(
-            String[] arguments
+            String[] args
     ) {
 
         SwingUtilities.invokeLater(
@@ -1868,18 +1530,19 @@ public final class MainDashboard extends JFrame {
                                     .getCurrentUser()
                                     .isEmpty()
                     ) {
-
                         Login.main(
                                 new String[0]
                         );
-
                     } else {
-
                         new MainDashboard();
                     }
                 }
         );
     }
+
+    // ============================================================
+    // NAVIGATION BUTTON
+    // ============================================================
 
     private final class NavigationButton
             extends JButton {
@@ -1914,9 +1577,7 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            setForeground(
-                    Color.WHITE
-            );
+            setForeground(Color.WHITE);
 
             setBackground(NAVY);
 
@@ -1926,12 +1587,28 @@ public final class MainDashboard extends JFrame {
 
             setFocusPainted(false);
 
+            setContentAreaFilled(true);
+
             setBorder(
                     new EmptyBorder(
                             13,
                             18,
                             13,
                             18
+                    )
+            );
+
+            setPreferredSize(
+                    new Dimension(
+                            304,
+                            52
+                    )
+            );
+
+            setMinimumSize(
+                    new Dimension(
+                            304,
+                            52
                     )
             );
 
@@ -1961,7 +1638,6 @@ public final class MainDashboard extends JFrame {
                         ) {
 
                             if (!active) {
-
                                 setBackground(
                                         NAVY_HOVER
                                 );
@@ -1974,10 +1650,7 @@ public final class MainDashboard extends JFrame {
                         ) {
 
                             if (!active) {
-
-                                setBackground(
-                                        NAVY
-                                );
+                                setBackground(NAVY);
                             }
                         }
                     }
@@ -1985,10 +1658,10 @@ public final class MainDashboard extends JFrame {
         }
 
         void setActive(
-                boolean active
+                boolean value
         ) {
 
-            this.active = active;
+            active = value;
 
             setBackground(
                     active
@@ -2008,6 +1681,231 @@ public final class MainDashboard extends JFrame {
         }
     }
 
+    // ============================================================
+    // DASHBOARD QUICK BUTTON
+    // ============================================================
+
+    private static final class DashboardButton
+            extends JButton {
+
+        private final Color normalColor;
+        private final Color hoverColor;
+        private final Icon icon;
+
+        DashboardButton(
+                String text,
+                IconType iconType,
+                Color color
+        ) {
+
+            super(text);
+
+            normalColor = color;
+
+            hoverColor =
+                    color.brighter();
+
+            icon =
+                    new VectorIcon(
+                            iconType,
+                            30,
+                            Color.WHITE
+                    );
+
+            setForeground(Color.WHITE);
+
+            setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.BOLD,
+                            13
+                    )
+            );
+
+            setHorizontalAlignment(
+                    SwingConstants.CENTER
+            );
+
+            setVerticalTextPosition(
+                    SwingConstants.BOTTOM
+            );
+
+            setHorizontalTextPosition(
+                    SwingConstants.CENTER
+            );
+
+            setIcon(icon);
+
+            setIconTextGap(8);
+
+            setFocusPainted(false);
+
+            setBorderPainted(false);
+
+            setContentAreaFilled(false);
+
+            setOpaque(false);
+
+            setCursor(
+                    Cursor.getPredefinedCursor(
+                            Cursor.HAND_CURSOR
+                    )
+            );
+
+            setBorder(
+                    new EmptyBorder(
+                            12,
+                            8,
+                            12,
+                            8
+                    )
+            );
+
+            addMouseListener(
+                    new MouseAdapter() {
+
+                        @Override
+                        public void mouseEntered(
+                                MouseEvent e
+                        ) {
+                            repaint();
+                        }
+
+                        @Override
+                        public void mouseExited(
+                                MouseEvent e
+                        ) {
+                            repaint();
+                        }
+                    }
+            );
+        }
+
+        @Override
+        protected void paintComponent(
+                Graphics graphics
+        ) {
+
+            Graphics2D g =
+                    (Graphics2D)
+                            graphics.create();
+
+            g.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            Color fill =
+                    getModel().isRollover()
+                            ? hoverColor
+                            : normalColor;
+
+            g.setColor(fill);
+
+            g.fillRoundRect(
+                    0,
+                    0,
+                    getWidth() - 1,
+                    getHeight() - 1,
+                    18,
+                    18
+            );
+
+            g.dispose();
+
+            super.paintComponent(graphics);
+        }
+    }
+
+    private static final class DashboardActionButton
+            extends JButton {
+
+        private final Color color;
+
+        DashboardActionButton(
+                String text,
+                Color color
+        ) {
+
+            super(text);
+
+            this.color = color;
+
+            setForeground(Color.WHITE);
+
+            setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.BOLD,
+                            12
+                    )
+            );
+
+            setFocusPainted(false);
+
+            setBorderPainted(false);
+
+            setContentAreaFilled(false);
+
+            setOpaque(false);
+
+            setCursor(
+                    Cursor.getPredefinedCursor(
+                            Cursor.HAND_CURSOR
+                    )
+            );
+
+            setBorder(
+                    new EmptyBorder(
+                            11,
+                            18,
+                            11,
+                            18
+                    )
+            );
+        }
+
+        @Override
+        protected void paintComponent(
+                Graphics graphics
+        ) {
+
+            Graphics2D g =
+                    (Graphics2D)
+                            graphics.create();
+
+            g.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            g.setColor(
+                    getModel().isPressed()
+                            ? color.darker()
+                            : getModel().isRollover()
+                            ? color.brighter()
+                            : color
+            );
+
+            g.fillRoundRect(
+                    0,
+                    0,
+                    getWidth() - 1,
+                    getHeight() - 1,
+                    14,
+                    14
+            );
+
+            g.dispose();
+
+            super.paintComponent(graphics);
+        }
+    }
+
+    // ============================================================
+    // METRIC CARD
+    // ============================================================
+
     private static final class MetricCard
             extends RoundedPanel {
 
@@ -2016,7 +1914,7 @@ public final class MainDashboard extends JFrame {
 
         MetricCard(
                 String title,
-                Color accentColor,
+                Color accent,
                 IconType iconType
         ) {
 
@@ -2041,12 +1939,12 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            JLabel iconLabel =
+            JLabel icon =
                     new JLabel(
                             new VectorIcon(
                                     iconType,
                                     44,
-                                    accentColor
+                                    accent
                             )
                     );
 
@@ -2085,16 +1983,12 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            valueLabel.setForeground(
-                    accentColor
-            );
+            valueLabel.setForeground(accent);
 
-            JLabel liveLabel =
-                    new JLabel(
-                            "Live count"
-                    );
+            JLabel live =
+                    new JLabel("Live count");
 
-            liveLabel.setFont(
+            live.setFont(
                     new Font(
                             "Segoe UI",
                             Font.PLAIN,
@@ -2102,7 +1996,7 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            liveLabel.setForeground(
+            live.setForeground(
                     MUTED_TEXT
             );
 
@@ -2118,10 +2012,10 @@ public final class MainDashboard extends JFrame {
                     Box.createVerticalStrut(5)
             );
 
-            textPanel.add(liveLabel);
+            textPanel.add(live);
 
             add(
-                    iconLabel,
+                    icon,
                     BorderLayout.WEST
             );
 
@@ -2131,29 +2025,40 @@ public final class MainDashboard extends JFrame {
             );
         }
 
-        void setValue(
-                int value
-        ) {
-
+        void setValue(int value) {
             valueLabel.setText(
                     String.valueOf(value)
             );
         }
 
-        void setText(
-                String text
-        ) {
-
-            valueLabel.setText(text);
+        void setText(String value) {
+            valueLabel.setText(value);
         }
     }
 
+    // ============================================================
+    // OCCUPANCY
+    // ============================================================
     private final class OccupancyInformationPanel
             extends JPanel {
 
         OccupancyInformationPanel() {
 
             setOpaque(false);
+
+            setPreferredSize(
+                    new Dimension(
+                            500,
+                            190
+                    )
+            );
+
+            setMinimumSize(
+                    new Dimension(
+                            400,
+                            180
+                    )
+            );
         }
 
         @Override
@@ -2163,11 +2068,11 @@ public final class MainDashboard extends JFrame {
 
             super.paintComponent(graphics);
 
-            Graphics2D graphics2D =
+            Graphics2D g =
                     (Graphics2D)
                             graphics.create();
 
-            graphics2D.setRenderingHint(
+            g.setRenderingHint(
                     RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON
             );
@@ -2185,154 +2090,210 @@ public final class MainDashboard extends JFrame {
             int total =
                     available + occupied;
 
-            double occupiedPercentage =
+            double occupancy =
                     total == 0
                             ? 0
-                            : occupied
-                            * 100.0
-                            / total;
+                            : (occupied * 100.0) / total;
 
-            int diameter =
-                    Math.min(
-                            175,
-                            Math.min(
-                                    getWidth() / 2,
-                                    getHeight() - 35
-                            )
-                    );
+            /*
+             * ---------------------------------------------------------
+             * PIE CHART
+             * ---------------------------------------------------------
+             */
 
-            int x = 30;
+            int diameter = 135;
 
-            int y =
+            int chartX = 20;
+
+            int chartY =
                     Math.max(
-                            15,
-                            (
-                                    getHeight()
-                                            - diameter
-                            ) / 2
+                            8,
+                            (getHeight() - diameter) / 2
                     );
 
-            graphics2D.setStroke(
+            /*
+             * Ring thickness
+             */
+            g.setStroke(
                     new BasicStroke(
-                            30,
+                            25,
                             BasicStroke.CAP_BUTT,
                             BasicStroke.JOIN_ROUND
                     )
             );
 
-            graphics2D.setColor(TEAL);
-
-            graphics2D.draw(
-                    new Arc2D.Double(
-                            x,
-                            y,
-                            diameter,
-                            diameter,
-                            90,
-                            360,
-                            Arc2D.OPEN
-                    )
+            /*
+             * Available portion
+             */
+            g.setColor(
+                    TEAL
             );
 
-            graphics2D.setColor(ORANGE);
-
-            graphics2D.draw(
-                    new Arc2D.Double(
-                            x,
-                            y,
-                            diameter,
-                            diameter,
-                            90,
-                            -occupiedPercentage
-                                    * 3.6,
-                            Arc2D.OPEN
-                    )
+            g.drawArc(
+                    chartX,
+                    chartY,
+                    diameter,
+                    diameter,
+                    90,
+                    360
             );
 
-            graphics2D.setFont(
+            /*
+             * Occupied portion
+             */
+            g.setColor(
+                    ORANGE
+            );
+
+            int occupiedAngle =
+                    (int)
+                            Math.round(
+                                    -occupancy * 3.6
+                            );
+
+            g.drawArc(
+                    chartX,
+                    chartY,
+                    diameter,
+                    diameter,
+                    90,
+                    occupiedAngle
+            );
+
+            /*
+             * ---------------------------------------------------------
+             * CENTER PERCENTAGE
+             * ---------------------------------------------------------
+             */
+
+            String percentageText =
+                    Math.round(occupancy)
+                            + "%";
+
+            g.setFont(
                     new Font(
                             "Segoe UI",
                             Font.BOLD,
-                            25
+                            22
                     )
             );
 
-            graphics2D.setColor(
+            g.setColor(
                     PRIMARY_TEXT
             );
 
-            String percentageText =
-                    Math.round(
-                            occupiedPercentage
-                    )
-                            + "%";
+            FontMetrics percentageMetrics =
+                    g.getFontMetrics();
 
-            FontMetrics metrics =
-                    graphics2D
-                            .getFontMetrics();
-
-            graphics2D.drawString(
-                    percentageText,
-                    x
+            int percentageX =
+                    chartX
                             + (
                             diameter
-                                    - metrics.stringWidth(
-                                    percentageText
-                            )
-                    ) / 2,
-                    y
+                                    - percentageMetrics
+                                    .stringWidth(
+                                            percentageText
+                                    )
+                    ) / 2;
+
+            int percentageY =
+                    chartY
                             + diameter / 2
+                            + 7;
+
+            g.drawString(
+                    percentageText,
+                    percentageX,
+                    percentageY
             );
 
-            graphics2D.setFont(
+            /*
+             * ---------------------------------------------------------
+             * CENTER LABEL
+             * ---------------------------------------------------------
+             */
+
+            String centerLabel =
+                    "Occupied";
+
+            g.setFont(
                     new Font(
                             "Segoe UI",
                             Font.PLAIN,
-                            12
+                            11
                     )
             );
 
-            graphics2D.setColor(
+            g.setColor(
                     MUTED_TEXT
             );
 
-            graphics2D.drawString(
-                    "Occupied",
-                    x
+            FontMetrics centerMetrics =
+                    g.getFontMetrics();
+
+            int centerX =
+                    chartX
+                            + (
+                            diameter
+                                    - centerMetrics
+                                    .stringWidth(
+                                            centerLabel
+                                    )
+                    ) / 2;
+
+            int centerY =
+                    chartY
                             + diameter / 2
-                            - 25,
-                    y
-                            + diameter / 2
-                            + 23
+                            + 25;
+
+            g.drawString(
+                    centerLabel,
+                    centerX,
+                    centerY
             );
 
-            int textX =
-                    x
+            /*
+             * ---------------------------------------------------------
+             * LEGEND
+             * ---------------------------------------------------------
+             *
+             * Enough vertical spacing so that both rows
+             * remain completely visible.
+             */
+
+            int legendX =
+                    chartX
                             + diameter
+                            + 45;
+
+            int legendY =
+                    chartY
                             + 55;
 
-            int textY =
-                    y + 65;
-
-            drawLegend(
-                    graphics2D,
-                    textX,
-                    textY,
+            /*
+             * Available Rooms
+             */
+            drawLegendItem(
+                    g,
+                    legendX,
+                    legendY,
                     TEAL,
                     "Available Rooms",
                     available
             );
 
-            drawLegend(
-                    graphics2D,
-                    textX,
-                    textY + 55,
+            /*
+             * Occupied Rooms
+             */
+            drawLegendItem(
+                    g,
+                    legendX,
+                    legendY + 48,
                     ORANGE,
                     "Occupied Rooms",
                     occupied
             );
 
-            graphics2D.dispose();
+            g.dispose();
         }
 
         private int getMetricValue(
@@ -2344,6 +2305,7 @@ public final class MainDashboard extends JFrame {
                 return Integer.parseInt(
                         card.valueLabel
                                 .getText()
+                                .trim()
                 );
 
             } catch (
@@ -2354,8 +2316,8 @@ public final class MainDashboard extends JFrame {
             }
         }
 
-        private void drawLegend(
-                Graphics2D graphics,
+        private void drawLegendItem(
+                Graphics2D g,
                 int x,
                 int y,
                 Color color,
@@ -2363,18 +2325,24 @@ public final class MainDashboard extends JFrame {
                 int value
         ) {
 
-            graphics.setColor(color);
+            /*
+             * Color indicator
+             */
+            g.setColor(color);
 
-            graphics.fillRoundRect(
+            g.fillRoundRect(
                     x,
-                    y - 13,
+                    y - 11,
                     16,
                     16,
                     5,
                     5
             );
 
-            graphics.setFont(
+            /*
+             * Label
+             */
+            g.setFont(
                     new Font(
                             "Segoe UI",
                             Font.PLAIN,
@@ -2382,17 +2350,20 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            graphics.setColor(
+            g.setColor(
                     MUTED_TEXT
             );
 
-            graphics.drawString(
+            g.drawString(
                     label,
-                    x + 28,
-                    y
+                    x + 27,
+                    y + 2
             );
 
-            graphics.setFont(
+            /*
+             * Value
+             */
+            g.setFont(
                     new Font(
                             "Segoe UI",
                             Font.BOLD,
@@ -2400,564 +2371,695 @@ public final class MainDashboard extends JFrame {
                     )
             );
 
-            graphics.setColor(
+            g.setColor(
                     PRIMARY_TEXT
             );
 
-            graphics.drawString(
+            g.drawString(
                     String.valueOf(value),
                     x + 170,
-                    y
+                    y + 2
             );
         }
     }
+    private int getMetricValue(
+            MetricCard card
+    ) {
 
-    private static class RoundedPanel
-            extends JPanel {
+        try {
 
-        private final Color fillColor;
-        private final int radius;
-
-        RoundedPanel(
-                Color fillColor,
-                int radius
-        ) {
-
-            this.fillColor = fillColor;
-            this.radius = radius;
-
-            setOpaque(false);
-        }
-
-        @Override
-        protected void paintComponent(
-                Graphics graphics
-        ) {
-
-            Graphics2D graphics2D =
-                    (Graphics2D)
-                            graphics.create();
-
-            graphics2D.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+            return Integer.parseInt(
+                    card.valueLabel
+                            .getText()
             );
 
-            graphics2D.setColor(
-                    new Color(
-                            24,
-                            45,
-                            74,
-                            18
-                    )
-            );
+        } catch (Exception e) {
 
-            graphics2D.fillRoundRect(
-                    2,
-                    4,
-                    getWidth() - 4,
-                    getHeight() - 6,
-                    radius,
-                    radius
-            );
-
-            graphics2D.setColor(
-                    fillColor
-            );
-
-            graphics2D.fillRoundRect(
-                    0,
-                    0,
-                    getWidth() - 3,
-                    getHeight() - 6,
-                    radius,
-                    radius
-            );
-
-            graphics2D.dispose();
-
-            super.paintComponent(graphics);
+            return 0;
         }
     }
 
-    private enum IconType {
-        HOSPITAL,
-        HOME,
-        DASHBOARD,
-        PATIENT,
-        STAFF,
-        ROOM,
-        BED,
-        ANALYTICS,
-        CHAT,
-        LOGOUT,
-        USER,
-        DOCTOR,
-        NURSE,
-        DOT
+    private void drawLegend(
+            Graphics2D g,
+            int x,
+            int y,
+            Color color,
+            String label,
+            int value
+    ) {
+
+        g.setColor(color);
+
+        g.fillRoundRect(
+                x,
+                y - 13,
+                16,
+                16,
+                5,
+                5
+        );
+
+        g.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        g.setColor(MUTED_TEXT);
+
+        g.drawString(
+                label,
+                x + 28,
+                y
+        );
+
+        g.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        g.setColor(PRIMARY_TEXT);
+
+        g.drawString(
+                String.valueOf(value),
+                x + 170,
+                y
+        );
     }
 
-    /**
-     * Vector icons use hue hain.
-     * Isliye emoji wale square boxes show nahi honge.
-     */
-    private static final class VectorIcon
-            implements Icon {
 
-        private final IconType iconType;
-        private final int size;
-        private final Color color;
+// ============================================================
+// COMMON UI
+// ============================================================
 
-        VectorIcon(
-                IconType iconType,
-                int size,
-                Color color
-        ) {
+private RoundedPanel createContentCard() {
 
-            this.iconType = iconType;
-            this.size = size;
-            this.color = color;
-        }
-
-        @Override
-        public int getIconWidth() {
-
-            return size;
-        }
-
-        @Override
-        public int getIconHeight() {
-
-            return size;
-        }
-
-        @Override
-        public void paintIcon(
-                Component component,
-                Graphics graphics,
-                int x,
-                int y
-        ) {
-
-            Graphics2D g =
-                    (Graphics2D)
-                            graphics.create();
-
-            g.translate(x, y);
-
-            g.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+    RoundedPanel card =
+            new RoundedPanel(
+                    Color.WHITE,
+                    18
             );
 
-            g.setColor(color);
+    card.setBorder(
+            new EmptyBorder(
+                    22,
+                    22,
+                    22,
+                    22
+            )
+    );
 
-            float scale =
-                    size / 32.0f;
+    return card;
+}
 
-            g.setStroke(
-                    new BasicStroke(
-                            Math.max(
-                                    1.6f,
-                                    2.1f * scale
-                            ),
-                            BasicStroke.CAP_ROUND,
-                            BasicStroke.JOIN_ROUND
-                    )
+private JLabel createSectionTitle(
+        String text
+) {
+
+    JLabel label =
+            new JLabel(text);
+
+    label.setFont(
+            new Font(
+                    "Segoe UI",
+                    Font.BOLD,
+                    18
+            )
+    );
+
+    label.setForeground(
+            PRIMARY_TEXT
+    );
+
+    return label;
+}
+
+private JLabel createStatusLabel(
+        String text,
+        Color color
+) {
+
+    JLabel label =
+            new JLabel(
+                    text,
+                    new VectorIcon(
+                            IconType.DOT,
+                            13,
+                            color
+                    ),
+                    SwingConstants.LEFT
             );
 
-            switch (iconType) {
+    label.setFont(
+            new Font(
+                    "Segoe UI",
+                    Font.PLAIN,
+                    13
+            )
+    );
 
-                case DOT ->
-                        g.fillOval(
-                                size / 4,
-                                size / 4,
-                                size / 2,
-                                size / 2
+    label.setForeground(
+            MUTED_TEXT
+    );
+
+    label.setIconTextGap(10);
+
+    return label;
+}
+
+// ============================================================
+// ROUNDED PANEL
+// ============================================================
+
+private static class RoundedPanel
+        extends JPanel {
+
+    private final Color fillColor;
+    private final int radius;
+
+    RoundedPanel(
+            Color fillColor,
+            int radius
+    ) {
+
+        this.fillColor = fillColor;
+        this.radius = radius;
+
+        setOpaque(false);
+    }
+
+    @Override
+    protected void paintComponent(
+            Graphics graphics
+    ) {
+
+        Graphics2D g =
+                (Graphics2D)
+                        graphics.create();
+
+        g.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON
+        );
+
+        g.setColor(
+                new Color(
+                        24,
+                        45,
+                        74,
+                        18
+                )
+        );
+
+        g.fillRoundRect(
+                2,
+                4,
+                getWidth() - 4,
+                getHeight() - 6,
+                radius,
+                radius
+        );
+
+        g.setColor(fillColor);
+
+        g.fillRoundRect(
+                0,
+                0,
+                getWidth() - 3,
+                getHeight() - 6,
+                radius,
+                radius
+        );
+
+        g.dispose();
+
+        super.paintComponent(graphics);
+    }
+}
+
+// ============================================================
+// ICONS
+// ============================================================
+
+private enum IconType {
+    HOSPITAL,
+    HOME,
+    DASHBOARD,
+    PATIENT,
+    STAFF,
+    ROOM,
+    BED,
+    ANALYTICS,
+    CHAT,
+    LOGOUT,
+    USER,
+    DOCTOR,
+    NURSE,
+    DOT
+}
+
+private static final class VectorIcon
+        implements Icon {
+
+    private final IconType iconType;
+    private final int size;
+    private final Color color;
+
+    VectorIcon(
+            IconType iconType,
+            int size,
+            Color color
+    ) {
+
+        this.iconType = iconType;
+        this.size = size;
+        this.color = color;
+    }
+
+    @Override
+    public int getIconWidth() {
+        return size;
+    }
+
+    @Override
+    public int getIconHeight() {
+        return size;
+    }
+
+    @Override
+    public void paintIcon(
+            Component component,
+            Graphics graphics,
+            int x,
+            int y
+    ) {
+
+        Graphics2D g =
+                (Graphics2D)
+                        graphics.create();
+
+        g.translate(x, y);
+
+        g.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON
+        );
+
+        float scale =
+                size / 32.0f;
+
+        g.setColor(color);
+
+        g.setStroke(
+                new BasicStroke(
+                        Math.max(
+                                1.6f,
+                                2.1f * scale
+                        ),
+                        BasicStroke.CAP_ROUND,
+                        BasicStroke.JOIN_ROUND
+                )
+        );
+
+        switch (iconType) {
+
+            case DOT ->
+                    g.fillOval(
+                            size / 4,
+                            size / 4,
+                            size / 2,
+                            size / 2
+                    );
+
+            case DASHBOARD -> {
+
+                int square =
+                        Math.round(
+                                10 * scale
                         );
 
-                case DASHBOARD -> {
+                int gap =
+                        Math.round(
+                                4 * scale
+                        );
 
-                    int square =
-                            Math.round(
-                                    10 * scale
-                            );
+                g.fillRoundRect(
+                        3,
+                        3,
+                        square,
+                        square,
+                        3,
+                        3
+                );
 
-                    int gap =
-                            Math.round(
-                                    4 * scale
-                            );
+                g.fillRoundRect(
+                        3 + square + gap,
+                        3,
+                        square,
+                        square,
+                        3,
+                        3
+                );
 
-                    g.fillRoundRect(
-                            3,
-                            3,
-                            square,
-                            square,
-                            3,
-                            3
-                    );
+                g.fillRoundRect(
+                        3,
+                        3 + square + gap,
+                        square,
+                        square,
+                        3,
+                        3
+                );
 
-                    g.fillRoundRect(
-                            3 + square + gap,
-                            3,
-                            square,
-                            square,
-                            3,
-                            3
-                    );
-
-                    g.fillRoundRect(
-                            3,
-                            3 + square + gap,
-                            square,
-                            square,
-                            3,
-                            3
-                    );
-
-                    g.fillRoundRect(
-                            3 + square + gap,
-                            3 + square + gap,
-                            square,
-                            square,
-                            3,
-                            3
-                    );
-                }
-
-                case HOME -> {
-
-                    g.drawLine(
-                            Math.round(4 * scale),
-                            Math.round(15 * scale),
-                            Math.round(16 * scale),
-                            Math.round(4 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(16 * scale),
-                            Math.round(4 * scale),
-                            Math.round(28 * scale),
-                            Math.round(15 * scale)
-                    );
-
-                    g.drawRect(
-                            Math.round(7 * scale),
-                            Math.round(14 * scale),
-                            Math.round(18 * scale),
-                            Math.round(14 * scale)
-                    );
-
-                    g.drawRect(
-                            Math.round(14 * scale),
-                            Math.round(20 * scale),
-                            Math.round(5 * scale),
-                            Math.round(8 * scale)
-                    );
-                }
-
-                case USER, PATIENT -> {
-
-                    g.drawOval(
-                            Math.round(11 * scale),
-                            Math.round(3 * scale),
-                            Math.round(10 * scale),
-                            Math.round(10 * scale)
-                    );
-
-                    g.drawArc(
-                            Math.round(5 * scale),
-                            Math.round(14 * scale),
-                            Math.round(22 * scale),
-                            Math.round(15 * scale),
-                            0,
-                            180
-                    );
-                }
-
-                case STAFF -> {
-
-                    g.drawOval(
-                            Math.round(12 * scale),
-                            Math.round(2 * scale),
-                            Math.round(8 * scale),
-                            Math.round(8 * scale)
-                    );
-
-                    g.drawOval(
-                            Math.round(3 * scale),
-                            Math.round(7 * scale),
-                            Math.round(7 * scale),
-                            Math.round(7 * scale)
-                    );
-
-                    g.drawOval(
-                            Math.round(22 * scale),
-                            Math.round(7 * scale),
-                            Math.round(7 * scale),
-                            Math.round(7 * scale)
-                    );
-
-                    g.drawArc(
-                            Math.round(7 * scale),
-                            Math.round(12 * scale),
-                            Math.round(18 * scale),
-                            Math.round(15 * scale),
-                            0,
-                            180
-                    );
-
-                    g.drawArc(
-                            0,
-                            Math.round(16 * scale),
-                            Math.round(13 * scale),
-                            Math.round(11 * scale),
-                            0,
-                            180
-                    );
-
-                    g.drawArc(
-                            Math.round(19 * scale),
-                            Math.round(16 * scale),
-                            Math.round(13 * scale),
-                            Math.round(11 * scale),
-                            0,
-                            180
-                    );
-                }
-
-                case ROOM, BED -> {
-
-                    g.drawLine(
-                            Math.round(4 * scale),
-                            Math.round(6 * scale),
-                            Math.round(4 * scale),
-                            Math.round(27 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(4 * scale),
-                            Math.round(21 * scale),
-                            Math.round(28 * scale),
-                            Math.round(21 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(28 * scale),
-                            Math.round(15 * scale),
-                            Math.round(28 * scale),
-                            Math.round(27 * scale)
-                    );
-
-                    g.drawRoundRect(
-                            Math.round(10 * scale),
-                            Math.round(13 * scale),
-                            Math.round(18 * scale),
-                            Math.round(8 * scale),
-                            4,
-                            4
-                    );
-
-                    g.fillOval(
-                            Math.round(6 * scale),
-                            Math.round(13 * scale),
-                            Math.round(6 * scale),
-                            Math.round(6 * scale)
-                    );
-                }
-
-                case ANALYTICS -> {
-
-                    g.fillRoundRect(
-                            Math.round(4 * scale),
-                            Math.round(18 * scale),
-                            Math.round(5 * scale),
-                            Math.round(10 * scale),
-                            2,
-                            2
-                    );
-
-                    g.fillRoundRect(
-                            Math.round(13 * scale),
-                            Math.round(11 * scale),
-                            Math.round(5 * scale),
-                            Math.round(17 * scale),
-                            2,
-                            2
-                    );
-
-                    g.fillRoundRect(
-                            Math.round(22 * scale),
-                            Math.round(4 * scale),
-                            Math.round(5 * scale),
-                            Math.round(24 * scale),
-                            2,
-                            2
-                    );
-                }
-
-                case CHAT -> {
-
-                    g.drawRoundRect(
-                            Math.round(3 * scale),
-                            Math.round(5 * scale),
-                            Math.round(26 * scale),
-                            Math.round(19 * scale),
-                            Math.round(8 * scale),
-                            Math.round(8 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(10 * scale),
-                            Math.round(24 * scale),
-                            Math.round(7 * scale),
-                            Math.round(29 * scale)
-                    );
-
-                    g.fillOval(
-                            Math.round(9 * scale),
-                            Math.round(13 * scale),
-                            Math.round(3 * scale),
-                            Math.round(3 * scale)
-                    );
-
-                    g.fillOval(
-                            Math.round(15 * scale),
-                            Math.round(13 * scale),
-                            Math.round(3 * scale),
-                            Math.round(3 * scale)
-                    );
-
-                    g.fillOval(
-                            Math.round(21 * scale),
-                            Math.round(13 * scale),
-                            Math.round(3 * scale),
-                            Math.round(3 * scale)
-                    );
-                }
-
-                case LOGOUT -> {
-
-                    g.drawRoundRect(
-                            Math.round(3 * scale),
-                            Math.round(4 * scale),
-                            Math.round(16 * scale),
-                            Math.round(24 * scale),
-                            4,
-                            4
-                    );
-
-                    g.drawLine(
-                            Math.round(13 * scale),
-                            Math.round(16 * scale),
-                            Math.round(29 * scale),
-                            Math.round(16 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(24 * scale),
-                            Math.round(11 * scale),
-                            Math.round(29 * scale),
-                            Math.round(16 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(24 * scale),
-                            Math.round(21 * scale),
-                            Math.round(29 * scale),
-                            Math.round(16 * scale)
-                    );
-                }
-
-                case HOSPITAL -> {
-
-                    g.drawOval(
-                            1,
-                            1,
-                            size - 3,
-                            size - 3
-                    );
-
-                    g.fillRoundRect(
-                            Math.round(13 * scale),
-                            Math.round(6 * scale),
-                            Math.round(6 * scale),
-                            Math.round(20 * scale),
-                            2,
-                            2
-                    );
-
-                    g.fillRoundRect(
-                            Math.round(6 * scale),
-                            Math.round(13 * scale),
-                            Math.round(20 * scale),
-                            Math.round(6 * scale),
-                            2,
-                            2
-                    );
-                }
-
-                case DOCTOR -> {
-
-                    g.drawOval(
-                            Math.round(11 * scale),
-                            Math.round(3 * scale),
-                            Math.round(10 * scale),
-                            Math.round(10 * scale)
-                    );
-
-                    g.drawArc(
-                            Math.round(6 * scale),
-                            Math.round(14 * scale),
-                            Math.round(20 * scale),
-                            Math.round(15 * scale),
-                            0,
-                            180
-                    );
-
-                    g.drawOval(
-                            Math.round(13 * scale),
-                            Math.round(20 * scale),
-                            Math.round(6 * scale),
-                            Math.round(6 * scale)
-                    );
-                }
-
-                case NURSE -> {
-
-                    g.drawOval(
-                            Math.round(11 * scale),
-                            Math.round(8 * scale),
-                            Math.round(10 * scale),
-                            Math.round(10 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(8 * scale),
-                            Math.round(5 * scale),
-                            Math.round(24 * scale),
-                            Math.round(5 * scale)
-                    );
-
-                    g.drawLine(
-                            Math.round(16 * scale),
-                            Math.round(1 * scale),
-                            Math.round(16 * scale),
-                            Math.round(9 * scale)
-                    );
-
-                    g.drawArc(
-                            Math.round(6 * scale),
-                            Math.round(18 * scale),
-                            Math.round(20 * scale),
-                            Math.round(12 * scale),
-                            0,
-                            180
-                    );
-                }
+                g.fillRoundRect(
+                        3 + square + gap,
+                        3 + square + gap,
+                        square,
+                        square,
+                        3,
+                        3
+                );
             }
 
-            g.dispose();
+            case HOME -> {
+
+                g.drawLine(
+                        4,
+                        15,
+                        16,
+                        4
+                );
+
+                g.drawLine(
+                        16,
+                        4,
+                        28,
+                        15
+                );
+
+                g.drawRect(
+                        7,
+                        14,
+                        18,
+                        14
+                );
+
+                g.drawRect(
+                        14,
+                        20,
+                        5,
+                        8
+                );
+            }
+
+            case USER, PATIENT -> {
+
+                g.drawOval(
+                        11,
+                        3,
+                        10,
+                        10
+                );
+
+                g.drawArc(
+                        5,
+                        14,
+                        22,
+                        15,
+                        0,
+                        180
+                );
+            }
+
+            case STAFF -> {
+
+                g.drawOval(
+                        12,
+                        2,
+                        8,
+                        8
+                );
+
+                g.drawOval(
+                        3,
+                        7,
+                        7,
+                        7
+                );
+
+                g.drawOval(
+                        22,
+                        7,
+                        7,
+                        7
+                );
+
+                g.drawArc(
+                        7,
+                        12,
+                        18,
+                        15,
+                        0,
+                        180
+                );
+            }
+
+            case ROOM, BED -> {
+
+                g.drawLine(
+                        4,
+                        6,
+                        4,
+                        27
+                );
+
+                g.drawLine(
+                        4,
+                        21,
+                        28,
+                        21
+                );
+
+                g.drawLine(
+                        28,
+                        15,
+                        28,
+                        27
+                );
+
+                g.drawRoundRect(
+                        10,
+                        13,
+                        18,
+                        8,
+                        4,
+                        4
+                );
+
+                g.fillOval(
+                        6,
+                        13,
+                        6,
+                        6
+                );
+            }
+
+            case ANALYTICS -> {
+
+                g.fillRoundRect(
+                        4,
+                        18,
+                        5,
+                        10,
+                        2,
+                        2
+                );
+
+                g.fillRoundRect(
+                        13,
+                        11,
+                        5,
+                        17,
+                        2,
+                        2
+                );
+
+                g.fillRoundRect(
+                        22,
+                        4,
+                        5,
+                        24,
+                        2,
+                        2
+                );
+            }
+
+            case CHAT -> {
+
+                g.drawRoundRect(
+                        3,
+                        5,
+                        26,
+                        19,
+                        8,
+                        8
+                );
+
+                g.drawLine(
+                        10,
+                        24,
+                        7,
+                        29
+                );
+
+                g.fillOval(
+                        9,
+                        13,
+                        3,
+                        3
+                );
+
+                g.fillOval(
+                        15,
+                        13,
+                        3,
+                        3
+                );
+
+                g.fillOval(
+                        21,
+                        13,
+                        3,
+                        3
+                );
+            }
+
+            case LOGOUT -> {
+
+                g.drawRoundRect(
+                        3,
+                        4,
+                        16,
+                        24,
+                        4,
+                        4
+                );
+
+                g.drawLine(
+                        13,
+                        16,
+                        29,
+                        16
+                );
+
+                g.drawLine(
+                        24,
+                        11,
+                        29,
+                        16
+                );
+
+                g.drawLine(
+                        24,
+                        21,
+                        29,
+                        16
+                );
+            }
+
+            case HOSPITAL -> {
+
+                g.drawOval(
+                        1,
+                        1,
+                        size - 3,
+                        size - 3
+                );
+
+                g.fillRoundRect(
+                        13,
+                        6,
+                        6,
+                        20,
+                        2,
+                        2
+                );
+
+                g.fillRoundRect(
+                        6,
+                        13,
+                        20,
+                        6,
+                        2,
+                        2
+                );
+            }
+
+            case DOCTOR -> {
+
+                g.drawOval(
+                        11,
+                        3,
+                        10,
+                        10
+                );
+
+                g.drawArc(
+                        6,
+                        14,
+                        20,
+                        15,
+                        0,
+                        180
+                );
+
+                g.drawOval(
+                        13,
+                        20,
+                        6,
+                        6
+                );
+            }
+
+            case NURSE -> {
+
+                g.drawOval(
+                        11,
+                        8,
+                        10,
+                        10
+                );
+
+                g.drawLine(
+                        8,
+                        5,
+                        24,
+                        5
+                );
+
+                g.drawLine(
+                        16,
+                        1,
+                        16,
+                        9
+                );
+
+                g.drawArc(
+                        6,
+                        18,
+                        20,
+                        12,
+                        0,
+                        180
+                );
+            }
         }
+
+        g.dispose();
     }
+}
 }

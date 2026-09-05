@@ -4,7 +4,7 @@ package hospital.management.system.chatbot;
  * Smart HMS Assistant mein supported languages.
  *
  * cultureCode Windows Speech Recognition aur
- * Text-to-Speech ke liye use hoga.
+ * Text-to-Speech ke liye use hota hai.
  */
 public enum AssistantLanguage {
 
@@ -90,36 +90,27 @@ public enum AssistantLanguage {
             String displayName,
             String cultureCode
     ) {
-
-        this.displayName =
-                displayName;
-
-        this.cultureCode =
-                cultureCode;
+        this.displayName = displayName;
+        this.cultureCode = cultureCode;
     }
 
     public String getDisplayName() {
-
         return displayName;
     }
 
     public String getCultureCode() {
-
         return cultureCode;
     }
 
     /*
-     * Purane VoiceAssistantService code ke saath
-     * compatibility ke liye.
+     * Backward compatibility ke liye.
      */
     public String getCulture() {
-
         return cultureCode;
     }
 
     @Override
     public String toString() {
-
         return displayName;
     }
 
@@ -130,26 +121,24 @@ public enum AssistantLanguage {
             String value
     ) {
 
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return HINGLISH;
         }
 
-        for (
-                AssistantLanguage language
-                : values()
-        ) {
+        String normalizedValue = value.trim();
 
-            if (
-                    language.displayName
-                            .equalsIgnoreCase(
-                                    value.trim()
-                            )
-                            ||
-                            language.name()
-                                    .equalsIgnoreCase(
-                                            value.trim()
-                                    )
-            ) {
+        for (AssistantLanguage language : values()) {
+
+            if (language.displayName.equalsIgnoreCase(
+                    normalizedValue
+            )
+                    || language.name().equalsIgnoreCase(
+                    normalizedValue
+            )
+                    || language.cultureCode.equalsIgnoreCase(
+                    normalizedValue
+            )) {
+
                 return language;
             }
         }

@@ -37,6 +37,15 @@ public final class ChatbotPanel extends JPanel {
     private static final Color BORDER_COLOR =
             new Color(218, 227, 238);
 
+    /*
+     * Windows ka Unicode font.
+     * Hindi, Marathi, Gujarati, Bengali, Tamil,
+     * Telugu, Kannada, Malayalam, Punjabi etc.
+     * ke liye much better support.
+     */
+    private static final String UNICODE_FONT =
+            findUnicodeFont();
+
     private final ChatbotService chatbotService =
             new ChatbotService();
 
@@ -55,7 +64,8 @@ public final class ChatbotPanel extends JPanel {
     private final JButton microphoneButton =
             new ModernButton("MIC");
 
-    private final JComboBox<AssistantLanguage> languageBox =
+    private final JComboBox<AssistantLanguage>
+            languageBox =
             new JComboBox<>(
                     AssistantLanguage.values()
             );
@@ -100,10 +110,54 @@ public final class ChatbotPanel extends JPanel {
 
         appendAssistantMessage(
                 "Namaste! Main aapka Smart HMS operational "
-                        + "assistant hoon. Patient, room ya "
-                        + "occupancy ke baare mein poochhiye."
+                        + "assistant hoon. Aap patient count, "
+                        + "available rooms, occupied rooms aur "
+                        + "room occupancy ke baare mein pooch "
+                        + "sakte hain."
         );
+
+        updateVoiceStatus();
     }
+
+    // ============================================================
+    // UNICODE FONT
+    // ============================================================
+
+    private static String findUnicodeFont() {
+
+        String[] preferredFonts = {
+                "Nirmala UI",
+                "Noto Sans",
+                "Noto Sans Devanagari",
+                "Arial Unicode MS",
+                "Segoe UI"
+        };
+
+        String[] installedFonts =
+                GraphicsEnvironment
+                        .getLocalGraphicsEnvironment()
+                        .getAvailableFontFamilyNames();
+
+        for (String preferred : preferredFonts) {
+
+            for (String installed : installedFonts) {
+
+                if (
+                        installed.equalsIgnoreCase(
+                                preferred
+                        )
+                ) {
+                    return installed;
+                }
+            }
+        }
+
+        return "Dialog";
+    }
+
+    // ============================================================
+    // HEADER
+    // ============================================================
 
     private JComponent createHeader() {
 
@@ -191,23 +245,39 @@ public final class ChatbotPanel extends JPanel {
                 )
         );
 
+        /*
+         * IMPORTANT:
+         * ComboBox ka default renderer Windows/LAF
+         * font use karta tha, jiski wajah se
+         * हिन्दी / தமிழ் etc. boxes ban rahe the.
+         *
+         * Custom renderer Unicode font force karta hai.
+         */
+        languageBox.setRenderer(
+                new LanguageRenderer()
+        );
+
         languageBox.setFont(
                 new Font(
-                        "Segoe UI",
+                        UNICODE_FONT,
                         Font.PLAIN,
-                        13
+                        14
                 )
         );
 
         languageBox.setPreferredSize(
                 new Dimension(
-                        150,
-                        38
+                        175,
+                        40
                 )
         );
 
         languageBox.setSelectedItem(
                 AssistantLanguage.HINGLISH
+        );
+
+        languageBox.addActionListener(
+                event -> updateVoiceStatus()
         );
 
         JLabel onlineLabel =
@@ -246,6 +316,70 @@ public final class ChatbotPanel extends JPanel {
         return headerPanel;
     }
 
+    // ============================================================
+    // LANGUAGE RENDERER
+    // ============================================================
+
+    private static final class LanguageRenderer
+            extends DefaultListCellRenderer {
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list,
+                Object value,
+                int index,
+                boolean isSelected,
+                boolean cellHasFocus
+        ) {
+
+            JLabel label =
+                    (JLabel)
+                            super.getListCellRendererComponent(
+                                    list,
+                                    value,
+                                    index,
+                                    isSelected,
+                                    cellHasFocus
+                            );
+
+            label.setFont(
+                    new Font(
+                            UNICODE_FONT,
+                            Font.PLAIN,
+                            14
+                    )
+            );
+
+            label.setBorder(
+                    new EmptyBorder(
+                            5,
+                            8,
+                            5,
+                            8
+                    )
+            );
+
+            if (
+                    value
+                            instanceof AssistantLanguage
+            ) {
+
+                AssistantLanguage language =
+                        (AssistantLanguage) value;
+
+                label.setText(
+                        language.getDisplayName()
+                );
+            }
+
+            return label;
+        }
+    }
+
+    // ============================================================
+    // CONTENT
+    // ============================================================
+
     private JComponent createContent() {
 
         JPanel bodyPanel =
@@ -270,6 +404,10 @@ public final class ChatbotPanel extends JPanel {
 
         return bodyPanel;
     }
+
+    // ============================================================
+    // CHAT CARD
+    // ============================================================
 
     private JComponent createChatCard() {
 
@@ -307,7 +445,7 @@ public final class ChatbotPanel extends JPanel {
 
         conversationPane.setFont(
                 new Font(
-                        "Segoe UI",
+                        UNICODE_FONT,
                         Font.PLAIN,
                         14
                 )
@@ -321,6 +459,32 @@ public final class ChatbotPanel extends JPanel {
                         8
                 )
         );
+
+        /*
+         * JTextPane ke default document font ko bhi
+         * Unicode font par set kar rahe hain.
+         */
+        SimpleAttributeSet defaultStyle =
+                new SimpleAttributeSet();
+
+        StyleConstants.setFontFamily(
+                defaultStyle,
+                UNICODE_FONT
+        );
+
+        StyleConstants.setFontSize(
+                defaultStyle,
+                14
+        );
+
+        conversationPane
+                .getStyledDocument()
+                .setCharacterAttributes(
+                        0,
+                        0,
+                        defaultStyle,
+                        false
+                );
 
         JScrollPane conversationScrollPane =
                 new JScrollPane(
@@ -337,6 +501,10 @@ public final class ChatbotPanel extends JPanel {
                 )
         );
 
+        conversationScrollPane
+                .getVerticalScrollBar()
+                .setUnitIncrement(16);
+
         cardPanel.add(
                 conversationScrollPane,
                 BorderLayout.CENTER
@@ -349,6 +517,10 @@ public final class ChatbotPanel extends JPanel {
 
         return cardPanel;
     }
+
+    // ============================================================
+    // INPUT SECTION
+    // ============================================================
 
     private JComponent createInputSection() {
 
@@ -379,7 +551,7 @@ public final class ChatbotPanel extends JPanel {
 
         inputField.setFont(
                 new Font(
-                        "Segoe UI",
+                        UNICODE_FONT,
                         Font.PLAIN,
                         14
                 )
@@ -388,7 +560,7 @@ public final class ChatbotPanel extends JPanel {
         inputField.setPreferredSize(
                 new Dimension(
                         0,
-                        46
+                        50
                 )
         );
 
@@ -419,7 +591,11 @@ public final class ChatbotPanel extends JPanel {
         );
 
         microphoneButton.setToolTipText(
-                "Speak using Windows Speech Recognition"
+                "Click to speak"
+        );
+
+        sendButton.setToolTipText(
+                "Send question"
         );
 
         styleButton(
@@ -442,7 +618,7 @@ public final class ChatbotPanel extends JPanel {
                 event -> sendMessage()
         );
 
-        JPanel buttonsPanel =
+        JPanel buttons =
                 new JPanel(
                         new GridLayout(
                                 1,
@@ -452,15 +628,10 @@ public final class ChatbotPanel extends JPanel {
                         )
                 );
 
-        buttonsPanel.setOpaque(false);
+        buttons.setOpaque(false);
 
-        buttonsPanel.add(
-                microphoneButton
-        );
-
-        buttonsPanel.add(
-                sendButton
-        );
+        buttons.add(microphoneButton);
+        buttons.add(sendButton);
 
         inputRow.add(
                 inputField,
@@ -468,7 +639,7 @@ public final class ChatbotPanel extends JPanel {
         );
 
         inputRow.add(
-                buttonsPanel,
+                buttons,
                 BorderLayout.EAST
         );
 
@@ -506,9 +677,7 @@ public final class ChatbotPanel extends JPanel {
                 )
         );
 
-        speakRepliesBox.setForeground(
-                NAVY
-        );
+        speakRepliesBox.setForeground(NAVY);
 
         statusPanel.add(
                 statusLabel,
@@ -528,9 +697,13 @@ public final class ChatbotPanel extends JPanel {
         return footerPanel;
     }
 
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
+
     private JComponent createQuickActions() {
 
-        JPanel quickActionsPanel =
+        JPanel panel =
                 new JPanel(
                         new FlowLayout(
                                 FlowLayout.LEFT,
@@ -539,53 +712,53 @@ public final class ChatbotPanel extends JPanel {
                         )
                 );
 
-        quickActionsPanel.setOpaque(false);
+        panel.setOpaque(false);
 
-        quickActionsPanel.add(
+        panel.add(
                 createQuickButton(
                         "Admitted Patients",
-                        "Total patients kitne hain?"
+                        "How many patients are admitted?"
                 )
         );
 
-        quickActionsPanel.add(
+        panel.add(
                 createQuickButton(
                         "Available Rooms",
-                        "Available rooms kitne hain?"
+                        "How many rooms are available?"
                 )
         );
 
-        quickActionsPanel.add(
+        panel.add(
                 createQuickButton(
                         "Occupied Rooms",
-                        "Occupied rooms kitne hain?"
+                        "How many rooms are occupied?"
                 )
         );
 
-        quickActionsPanel.add(
+        panel.add(
                 createQuickButton(
                         "Occupancy",
-                        "Room occupancy kya hai?"
+                        "What is the room occupancy?"
                 )
         );
 
-        quickActionsPanel.add(
+        panel.add(
                 createQuickButton(
                         "Help",
                         "Help"
                 )
         );
 
-        return quickActionsPanel;
+        return panel;
     }
 
     private JButton createQuickButton(
-            String buttonText,
+            String text,
             String message
     ) {
 
         JButton button =
-                new ModernButton(buttonText);
+                new ModernButton(text);
 
         button.setFont(
                 new Font(
@@ -635,6 +808,10 @@ public final class ChatbotPanel extends JPanel {
 
         return button;
     }
+
+    // ============================================================
+    // INFORMATION CARD
+    // ============================================================
 
     private JComponent createInformationCard() {
 
@@ -688,10 +865,6 @@ public final class ChatbotPanel extends JPanel {
 
         titleLabel.setForeground(NAVY);
 
-        titleLabel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
         cardPanel.add(titleLabel);
 
         cardPanel.add(
@@ -718,8 +891,14 @@ public final class ChatbotPanel extends JPanel {
 
         addCapability(
                 cardPanel,
+                "Natural language",
+                "Common English and Hinglish questions"
+        );
+
+        addCapability(
+                cardPanel,
                 "Privacy aware",
-                "Sensitive medical data protected"
+                "No diagnosis or prescription"
         );
 
         cardPanel.add(
@@ -745,13 +924,6 @@ public final class ChatbotPanel extends JPanel {
                         12,
                         12,
                         12
-                )
-        );
-
-        warningPanel.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        90
                 )
         );
 
@@ -807,10 +979,6 @@ public final class ChatbotPanel extends JPanel {
 
         titleLabel.setForeground(NAVY);
 
-        titleLabel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
         JLabel detailsLabel =
                 new JLabel(details);
 
@@ -826,10 +994,6 @@ public final class ChatbotPanel extends JPanel {
                 MUTED_TEXT
         );
 
-        detailsLabel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
         parent.add(titleLabel);
 
         parent.add(
@@ -842,6 +1006,10 @@ public final class ChatbotPanel extends JPanel {
                 Box.createVerticalStrut(18)
         );
     }
+
+    // ============================================================
+    // SEND MESSAGE
+    // ============================================================
 
     private void sendMessage() {
 
@@ -862,13 +1030,13 @@ public final class ChatbotPanel extends JPanel {
 
         inputField.setText("");
 
+        AssistantLanguage language =
+                getSelectedLanguage();
+
         setBusy(
                 true,
-                "Generating live response..."
+                "Generating response..."
         );
-
-        AssistantLanguage selectedLanguage =
-                getSelectedLanguage();
 
         SwingWorker<String, Void> worker =
                 new SwingWorker<>() {
@@ -879,7 +1047,7 @@ public final class ChatbotPanel extends JPanel {
                         return chatbotService
                                 .generateResponse(
                                         message,
-                                        selectedLanguage
+                                        language
                                 );
                     }
 
@@ -902,7 +1070,7 @@ public final class ChatbotPanel extends JPanel {
 
                                 speakResponse(
                                         response,
-                                        selectedLanguage
+                                        language
                                 );
 
                             } else {
@@ -916,7 +1084,8 @@ public final class ChatbotPanel extends JPanel {
                         } catch (Exception exception) {
 
                             appendAssistantMessage(
-                                    "Response could not be generated."
+                                    "Sorry, response generate nahi "
+                                            + "ho paayi. Please try again."
                             );
 
                             setBusy(
@@ -930,22 +1099,23 @@ public final class ChatbotPanel extends JPanel {
         worker.execute();
     }
 
+    // ============================================================
+    // MICROPHONE
+    // ============================================================
+
     private void listenFromMicrophone() {
 
         if (!voiceService.isSupported()) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Voice input is available on Windows.\n"
-                            + "You can still type your question.",
-                    "Voice Assistant",
-                    JOptionPane.INFORMATION_MESSAGE
+            setBusy(
+                    false,
+                    "Voice is available on Windows only."
             );
 
             return;
         }
 
-        AssistantLanguage selectedLanguage =
+        AssistantLanguage language =
                 getSelectedLanguage();
 
         setBusy(
@@ -961,7 +1131,7 @@ public final class ChatbotPanel extends JPanel {
                             throws Exception {
 
                         return voiceService.listen(
-                                selectedLanguage
+                                language
                         );
                     }
 
@@ -970,11 +1140,11 @@ public final class ChatbotPanel extends JPanel {
 
                         try {
 
-                            String recognizedText =
+                            String recognized =
                                     get();
 
                             inputField.setText(
-                                    recognizedText
+                                    recognized
                             );
 
                             setBusy(
@@ -993,13 +1163,14 @@ public final class ChatbotPanel extends JPanel {
 
                             JOptionPane.showMessageDialog(
                                     ChatbotPanel.this,
-                                    "Voice input could not start.\n"
-                                            + rootMessage(exception)
-                                            + "\n\nInstall the selected "
-                                            + "Windows speech language or "
-                                            + "type your question.",
+                                    "Voice input could not start.\n\n"
+                                            + rootMessage(
+                                            exception
+                                    )
+                                            + "\n\n"
+                                            + "You can still type your question.",
                                     "Voice Input",
-                                    JOptionPane.INFORMATION_MESSAGE
+                                    JOptionPane.WARNING_MESSAGE
                             );
                         }
                     }
@@ -1007,6 +1178,10 @@ public final class ChatbotPanel extends JPanel {
 
         worker.execute();
     }
+
+    // ============================================================
+    // TEXT TO SPEECH
+    // ============================================================
 
     private void speakResponse(
             String text,
@@ -1036,6 +1211,7 @@ public final class ChatbotPanel extends JPanel {
                     protected void done() {
 
                         try {
+
                             get();
 
                             setBusy(
@@ -1047,7 +1223,7 @@ public final class ChatbotPanel extends JPanel {
 
                             setBusy(
                                     false,
-                                    "Speech unavailable"
+                                    "Reply shown as text"
                             );
                         }
                     }
@@ -1056,16 +1232,53 @@ public final class ChatbotPanel extends JPanel {
         worker.execute();
     }
 
+    // ============================================================
+    // VOICE STATUS
+    // ============================================================
+
+    private void updateVoiceStatus() {
+
+        AssistantLanguage language =
+                getSelectedLanguage();
+
+        if (
+                voiceService
+                        .isRecognitionLanguageAvailable(
+                                language
+                        )
+        ) {
+
+            statusLabel.setText(
+                    "Voice ready"
+            );
+
+        } else {
+
+            statusLabel.setText(
+                    "Voice: Windows recognizer fallback available"
+            );
+        }
+    }
+
+    // ============================================================
+    // GET SELECTED LANGUAGE
+    // ============================================================
+
     private AssistantLanguage getSelectedLanguage() {
 
-        AssistantLanguage selectedLanguage =
+        AssistantLanguage selected =
                 (AssistantLanguage)
-                        languageBox.getSelectedItem();
+                        languageBox
+                                .getSelectedItem();
 
-        return selectedLanguage == null
+        return selected == null
                 ? AssistantLanguage.HINGLISH
-                : selectedLanguage;
+                : selected;
     }
+
+    // ============================================================
+    // CHAT MESSAGE
+    // ============================================================
 
     private void appendAssistantMessage(
             String text
@@ -1101,6 +1314,16 @@ public final class ChatbotPanel extends JPanel {
                 authorColor
         );
 
+        StyleConstants.setFontFamily(
+                authorStyle,
+                UNICODE_FONT
+        );
+
+        StyleConstants.setFontSize(
+                authorStyle,
+                14
+        );
+
         SimpleAttributeSet textStyle =
                 new SimpleAttributeSet();
 
@@ -1109,9 +1332,13 @@ public final class ChatbotPanel extends JPanel {
                 NAVY
         );
 
+        /*
+         * MOST IMPORTANT FIX:
+         * Text ko Segoe UI ki jagah Unicode font mein render karo.
+         */
         StyleConstants.setFontFamily(
                 textStyle,
-                "Segoe UI"
+                UNICODE_FONT
         );
 
         StyleConstants.setFontSize(
@@ -1121,7 +1348,7 @@ public final class ChatbotPanel extends JPanel {
 
         try {
 
-            String currentTime =
+            String time =
                     LocalTime.now()
                             .format(
                                     DateTimeFormatter
@@ -1134,7 +1361,7 @@ public final class ChatbotPanel extends JPanel {
                     document.getLength(),
                     author
                             + "  "
-                            + currentTime
+                            + time
                             + "\n",
                     authorStyle
             );
@@ -1151,11 +1378,12 @@ public final class ChatbotPanel extends JPanel {
             );
 
         } catch (BadLocationException ignored) {
-
-            // Styled document insertion failure
-            // application ko stop nahi karega.
         }
     }
+
+    // ============================================================
+    // BUSY STATE
+    // ============================================================
 
     private void setBusy(
             boolean busy,
@@ -1164,9 +1392,7 @@ public final class ChatbotPanel extends JPanel {
 
         sendButton.setEnabled(!busy);
 
-        microphoneButton.setEnabled(
-                !busy
-        );
+        microphoneButton.setEnabled(!busy);
 
         inputField.setEnabled(!busy);
 
@@ -1175,9 +1401,14 @@ public final class ChatbotPanel extends JPanel {
         statusLabel.setText(message);
 
         if (!busy) {
+
             inputField.requestFocusInWindow();
         }
     }
+
+    // ============================================================
+    // BUTTON STYLE
+    // ============================================================
 
     private void styleButton(
             JButton button,
@@ -1194,7 +1425,9 @@ public final class ChatbotPanel extends JPanel {
         );
 
         button.setBackground(background);
+
         button.setForeground(foreground);
+
         button.setFocusPainted(false);
 
         button.setCursor(
@@ -1218,17 +1451,23 @@ public final class ChatbotPanel extends JPanel {
         );
     }
 
+    // ============================================================
+    // ERROR MESSAGE
+    // ============================================================
+
     private String rootMessage(
             Throwable throwable
     ) {
 
-        Throwable current = throwable;
+        Throwable current =
+                throwable;
 
         while (
-                current.getCause()
-                        != null
+                current.getCause() != null
         ) {
-            current = current.getCause();
+
+            current =
+                    current.getCause();
         }
 
         return current.getMessage() == null

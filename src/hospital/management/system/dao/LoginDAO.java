@@ -30,6 +30,21 @@ public class LoginDAO {
             char[] password
     ) throws SQLException {
 
+        return authenticateUser(username, password, null);
+    }
+
+    /**
+     * Username, password aur selected role tino verify karta hai.
+     *
+     * Role database se compare hota hai, isliye sirf dropdown change
+     * karke kisi doosre role ke privileges nahi mil sakte.
+     */
+    public Optional<LoggedInUser> authenticateUser(
+            String username,
+            char[] password,
+            String expectedRole
+    ) throws SQLException {
+
         if (username == null ||
                 username.isBlank() ||
                 password == null ||
@@ -46,6 +61,10 @@ public class LoginDAO {
                 WHERE l.ID = ?
                   AND l.PW = ?
                   AND (
+                        ? IS NULL
+                        OR UPPER(l.Role) = UPPER(?)
+                  )
+                  AND (
                         UPPER(l.Role) NOT IN ('DOCTOR', 'NURSE')
                         OR UPPER(COALESCE(s.Status, 'INACTIVE')) = 'ACTIVE'
                   )
@@ -60,20 +79,18 @@ public class LoginDAO {
                         connection.prepareStatement(sql)
         ) {
 
-            statement.setString(
-                    1,
-                    username.trim()
-            );
+            statement.setString(1, username.trim());
+            statement.setString(2, new String(password));
 
-            statement.setString(
-                    2,
-                    new String(password)
-            );
+            if (expectedRole == null || expectedRole.isBlank()) {
+                statement.setNull(3, java.sql.Types.VARCHAR);
+                statement.setNull(4, java.sql.Types.VARCHAR);
+            } else {
+                statement.setString(3, expectedRole.trim());
+                statement.setString(4, expectedRole.trim());
+            }
 
-            try (
-                    ResultSet resultSet =
-                            statement.executeQuery()
-            ) {
+            try (ResultSet resultSet = statement.executeQuery()) {
 
                 if (!resultSet.next()) {
                     return Optional.empty();
@@ -86,23 +103,18 @@ public class LoginDAO {
                         resultSet.getString("Role");
 
                 String patientNumber =
-                        resultSet.getString(
-                                "Patient_Number"
-                        );
+                        resultSet.getString("Patient_Number");
 
                 UserRole role =
-                        UserRole.fromDatabaseValue(
-                                databaseRole
-                        );
+                        UserRole.fromDatabaseValue(databaseRole);
 
-                LoggedInUser loggedInUser =
+                return Optional.of(
                         new LoggedInUser(
                                 databaseUsername,
                                 role,
                                 patientNumber
-                        );
-
-                return Optional.of(loggedInUser);
+                        )
+                );
             }
         }
     }

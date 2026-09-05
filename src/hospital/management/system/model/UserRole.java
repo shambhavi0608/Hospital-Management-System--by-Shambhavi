@@ -1,11 +1,13 @@
 package hospital.management.system.model;
 
-/*
- * Application ke supported user roles.
+/**
+ * Application ke supported roles.
  *
- * INTERVIEW:
- * Enum fixed role values provide karta hai, jisse spelling mistakes
- * aur unauthorized random role values avoid hoti hain.
+ * RBAC:
+ * ADMIN  -> Full administrative access
+ * DOCTOR -> Clinical patient access
+ * NURSE  -> Read-only clinical access
+ * PATIENT -> Sirf apna portal data
  */
 public enum UserRole {
 
@@ -14,49 +16,67 @@ public enum UserRole {
     NURSE,
     PATIENT;
 
-    /*
-     * Database ke String role ko safe enum value mein convert karta hai.
-     */
-    public static UserRole fromDatabaseValue(
-            String databaseRole
-    ) {
+    public static UserRole fromDatabaseValue(String databaseRole) {
 
-        if (databaseRole == null ||
-                databaseRole.isBlank()) {
-
+        if (databaseRole == null || databaseRole.isBlank()) {
             throw new IllegalArgumentException(
                     "User role database mein missing hai."
             );
         }
 
         try {
-
             return UserRole.valueOf(
-                    databaseRole
-                            .trim()
-                            .toUpperCase()
+                    databaseRole.trim().toUpperCase()
             );
 
         } catch (IllegalArgumentException exception) {
-
             throw new IllegalArgumentException(
-                    "Unsupported user role: "
-                            + databaseRole
+                    "Unsupported user role: " + databaseRole
             );
         }
     }
 
-    /*
-     * UI par readable role name show karne ke liye.
-     */
     public String getDisplayName() {
 
         return switch (this) {
-
             case ADMIN -> "Administrator";
             case DOCTOR -> "Doctor";
             case NURSE -> "Nurse";
             case PATIENT -> "Patient";
         };
+    }
+
+    public boolean isStaff() {
+        return this == ADMIN ||
+                this == DOCTOR ||
+                this == NURSE;
+    }
+
+    public boolean canViewPatients() {
+        return this == ADMIN ||
+                this == DOCTOR ||
+                this == NURSE;
+    }
+
+    public boolean canModifyPatients() {
+        return this == ADMIN ||
+                this == DOCTOR;
+    }
+
+    public boolean canManageStaff() {
+        return this == ADMIN;
+    }
+
+    public boolean canViewAnalytics() {
+        return this == ADMIN ||
+                this == DOCTOR;
+    }
+
+    public boolean canUseAssistant() {
+        return true;
+    }
+
+    public boolean canAccessPatientPortal() {
+        return this == PATIENT;
     }
 }

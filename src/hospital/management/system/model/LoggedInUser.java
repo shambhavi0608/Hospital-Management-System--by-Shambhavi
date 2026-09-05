@@ -1,12 +1,10 @@
 package hospital.management.system.model;
 
-/*
+/**
  * Successfully authenticated user ki session information.
  *
- * INTERVIEW:
- * Password is class mein store nahi hota.
- * Sirf application ko required identity aur authorization
- * information maintain hoti hai.
+ * IMPORTANT:
+ * Password kabhi bhi is class mein store nahi hota.
  */
 public final class LoggedInUser {
 
@@ -20,16 +18,13 @@ public final class LoggedInUser {
             String patientNumber
     ) {
 
-        if (username == null ||
-                username.isBlank()) {
-
+        if (username == null || username.isBlank()) {
             throw new IllegalArgumentException(
                     "Username required hai."
             );
         }
 
         if (role == null) {
-
             throw new IllegalArgumentException(
                     "User role required hai."
             );
@@ -63,38 +58,53 @@ public final class LoggedInUser {
     }
 
     public boolean hasPatientNumber() {
-
         return patientNumber != null &&
                 !patientNumber.isBlank();
     }
 
     public boolean hasRole(UserRole requiredRole) {
 
-        return role == requiredRole;
+        return requiredRole != null &&
+                role == requiredRole;
     }
 
     public boolean isAdmin() {
-
         return role == UserRole.ADMIN;
     }
 
     public boolean isDoctor() {
-
         return role == UserRole.DOCTOR;
     }
 
     public boolean isNurse() {
-
         return role == UserRole.NURSE;
     }
 
     public boolean isPatient() {
-
         return role == UserRole.PATIENT;
     }
 
-    public String getDisplayRole() {
+    public boolean canViewPatients() {
+        return role.canViewPatients();
+    }
 
+    public boolean canModifyPatients() {
+        return role.canModifyPatients();
+    }
+
+    public boolean canManageStaff() {
+        return role.canManageStaff();
+    }
+
+    public boolean canViewAnalytics() {
+        return role.canViewAnalytics();
+    }
+
+    public boolean canUseAssistant() {
+        return role.canUseAssistant();
+    }
+
+    public String getDisplayRole() {
         return role.getDisplayName();
     }
 

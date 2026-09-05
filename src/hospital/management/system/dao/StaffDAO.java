@@ -11,33 +11,36 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Staff database operations.
- *
- * Admin is DAO ke through doctors aur nurses ko:
- * - Database mein add kar sakta hai
- * - Search kar sakta hai
- * - Active/Inactive kar sakta hai
- */
 public final class StaffDAO {
 
     /**
-     * Saare staff members load karta hai.
-     * Keyword empty ho to complete staff list milegi.
+     * Load all staff members.
+     *
+     * Empty keyword = all staff.
      */
     public List<StaffMember> findAll(String keyword)
             throws SQLException {
 
-        String filter = keyword == null
-                ? ""
-                : keyword.trim();
+        String filter =
+                keyword == null
+                        ? ""
+                        : keyword.trim();
 
         String sql =
-                "SELECT Staff_ID, Name, Role, Department, " +
-                        "Specialization, Phone, Email, Shift, " +
-                        "Login_ID, Status " +
+                "SELECT " +
+                        "Staff_ID, " +
+                        "Name, " +
+                        "Role, " +
+                        "Department, " +
+                        "Specialization, " +
+                        "Phone, " +
+                        "Email, " +
+                        "Shift, " +
+                        "Login_ID, " +
+                        "Status " +
                         "FROM staff_info " +
-                        "WHERE (? = '' " +
+                        "WHERE " +
+                        "(? = '' " +
                         "OR Name LIKE ? " +
                         "OR Role LIKE ? " +
                         "OR Department LIKE ? " +
@@ -56,7 +59,8 @@ public final class StaffDAO {
                         connection.prepareStatement(sql)
         ) {
 
-            String likeFilter = "%" + filter + "%";
+            String likeFilter =
+                    "%" + filter + "%";
 
             statement.setString(1, filter);
             statement.setString(2, likeFilter);
@@ -77,36 +81,47 @@ public final class StaffDAO {
                                     resultSet.getInt(
                                             "Staff_ID"
                                     ),
+
                                     resultSet.getString(
                                             "Name"
                                     ),
+
                                     resultSet.getString(
                                             "Role"
                                     ),
+
                                     resultSet.getString(
                                             "Department"
                                     ),
+
                                     resultSet.getString(
                                             "Specialization"
                                     ),
+
                                     resultSet.getString(
                                             "Phone"
                                     ),
+
                                     resultSet.getString(
                                             "Email"
                                     ),
+
                                     resultSet.getString(
                                             "Shift"
                                     ),
+
                                     resultSet.getString(
                                             "Login_ID"
                                     ),
+
                                     resultSet.getString(
                                             "Status"
                                     )
                             );
 
-                    staffMembers.add(staffMember);
+                    staffMembers.add(
+                            staffMember
+                    );
                 }
             }
         }
@@ -114,11 +129,12 @@ public final class StaffDAO {
         return staffMembers;
     }
 
+
     /**
-     * Naya doctor ya nurse add karta hai.
+     * Add a new doctor or nurse.
      *
-     * login aur staff_info dono tables ko ek hi
-     * transaction mein update karta hai.
+     * login and staff_info are inserted
+     * inside one transaction.
      */
     public void addStaff(
             String name,
@@ -134,45 +150,96 @@ public final class StaffDAO {
 
         requireAdministrator();
 
-        String normalizedRole = role == null
-                ? ""
-                : role.trim().toUpperCase();
+        String normalizedRole =
+                role == null
+                        ? ""
+                        : role.trim().toUpperCase();
 
-        if (!normalizedRole.equals("DOCTOR")
-                && !normalizedRole.equals("NURSE")) {
+        if (
+                !normalizedRole.equals("DOCTOR")
+                        &&
+                        !normalizedRole.equals("NURSE")
+        ) {
+
             throw new IllegalArgumentException(
                     "Only DOCTOR or NURSE staff accounts can be created."
             );
         }
+
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Staff name is required."
+            );
+        }
+
+        if (
+                department == null
+                        ||
+                        department.trim().isEmpty()
+        ) {
+            throw new IllegalArgumentException(
+                    "Department is required."
+            );
+        }
+
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phone number is required."
+            );
+        }
+
+        if (
+                loginId == null
+                        ||
+                        loginId.trim().isEmpty()
+        ) {
+            throw new IllegalArgumentException(
+                    "Login ID is required."
+            );
+        }
+
+        if (
+                password == null
+                        ||
+                        password.length == 0
+        ) {
+            throw new IllegalArgumentException(
+                    "Password is required."
+            );
+        }
+
 
         String loginSql =
                 "INSERT INTO login " +
                         "(ID, PW, Role, Patient_Number) " +
                         "VALUES (?, ?, ?, NULL)";
 
+
         String staffSql =
                 "INSERT INTO staff_info " +
-                        "(Name, Role, Department, Specialization, " +
-                        "Phone, Email, Shift, Login_ID, Status) " +
+                        "(Name, Role, Department, " +
+                        "Specialization, Phone, Email, " +
+                        "Shift, Login_ID, Status) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')";
+
 
         Connection connection = null;
 
         try {
+
             connection =
                     DatabaseConnection.getConnection();
 
             connection.setAutoCommit(false);
 
+
+            /*
+             * First create login account.
+             */
             try (
                     PreparedStatement loginStatement =
                             connection.prepareStatement(
                                     loginSql
-                            );
-
-                    PreparedStatement staffStatement =
-                            connection.prepareStatement(
-                                    staffSql
                             )
             ) {
 
@@ -192,6 +259,18 @@ public final class StaffDAO {
                 );
 
                 loginStatement.executeUpdate();
+            }
+
+
+            /*
+             * Then create staff record.
+             */
+            try (
+                    PreparedStatement staffStatement =
+                            connection.prepareStatement(
+                                    staffSql
+                            )
+            ) {
 
                 staffStatement.setString(
                         1,
@@ -205,7 +284,7 @@ public final class StaffDAO {
 
                 staffStatement.setString(
                         3,
-                        cleanValue(department)
+                        department.trim()
                 );
 
                 staffStatement.setString(
@@ -215,7 +294,7 @@ public final class StaffDAO {
 
                 staffStatement.setString(
                         5,
-                        cleanValue(phone)
+                        phone.trim()
                 );
 
                 staffStatement.setString(
@@ -234,16 +313,19 @@ public final class StaffDAO {
                 );
 
                 staffStatement.executeUpdate();
-
-                connection.commit();
             }
+
+
+            connection.commit();
 
         } catch (SQLException exception) {
 
             if (connection != null) {
+
                 try {
                     connection.rollback();
                 } catch (SQLException rollbackException) {
+
                     exception.addSuppressed(
                             rollbackException
                     );
@@ -259,20 +341,19 @@ public final class StaffDAO {
                 try {
                     connection.setAutoCommit(true);
                 } catch (SQLException ignored) {
-                    // Connection close hone wali hai.
                 }
 
                 try {
                     connection.close();
                 } catch (SQLException ignored) {
-                    // Main database exception ko preserve karna hai.
                 }
             }
         }
     }
 
+
     /**
-     * Staff member ko ACTIVE ya INACTIVE karta hai.
+     * Activate / deactivate staff member.
      */
     public boolean setStatus(
             int staffId,
@@ -291,6 +372,7 @@ public final class StaffDAO {
                         &&
                         !normalizedStatus.equals("INACTIVE")
         ) {
+
             throw new IllegalArgumentException(
                     "Status must be ACTIVE or INACTIVE."
             );
@@ -323,12 +405,21 @@ public final class StaffDAO {
         }
     }
 
+
     /**
-     * Kisi Login ID ka pehle se present hona check karta hai.
+     * Check whether login ID already exists.
      */
     public boolean loginIdExists(
             String loginId
     ) throws SQLException {
+
+        if (
+                loginId == null
+                        ||
+                        loginId.trim().isEmpty()
+        ) {
+            return false;
+        }
 
         String sql =
                 "SELECT COUNT(*) " +
@@ -354,28 +445,30 @@ public final class StaffDAO {
             ) {
 
                 return resultSet.next()
-                        && resultSet.getInt(1) > 0;
+                        &&
+                        resultSet.getInt(1) > 0;
             }
         }
     }
 
-    /**
-     * Dashboard ke liye active doctors count.
-     */
+
     public int countActiveDoctors()
             throws SQLException {
 
-        return countActiveStaffByRole("DOCTOR");
+        return countActiveStaffByRole(
+                "DOCTOR"
+        );
     }
 
-    /**
-     * Dashboard ke liye active nurses count.
-     */
+
     public int countActiveNurses()
             throws SQLException {
 
-        return countActiveStaffByRole("NURSE");
+        return countActiveStaffByRole(
+                "NURSE"
+        );
     }
+
 
     private int countActiveStaffByRole(
             String role
@@ -414,6 +507,7 @@ public final class StaffDAO {
         }
     }
 
+
     private String cleanValue(
             String value
     ) {
@@ -425,9 +519,14 @@ public final class StaffDAO {
         return value.trim();
     }
 
+
     private void requireAdministrator() {
 
-        if (!SessionManager.isCurrentUserAdmin()) {
+        if (
+                !SessionManager
+                        .isCurrentUserAdmin()
+        ) {
+
             throw new SecurityException(
                     "Only an administrator can modify staff records."
             );
